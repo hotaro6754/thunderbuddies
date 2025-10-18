@@ -48,6 +48,69 @@
         </div>
     </div>
 
+        <!-- Floating Chatbot -->
+        <div id="chat-widget" style="position:fixed;right:20px;bottom:20px;z-index:9999;font-family:Arial,Helvetica,sans-serif;">
+            <div id="chat-toggle" style="width:60px;height:60px;border-radius:50%;background:#0ea5a4;color:#03111a;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,0.2);cursor:pointer">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div id="chat-panel" style="width:320px;max-height:480px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden;display:none;flex-direction:column;margin-top:8px;color:#111;">
+                <div style="padding:12px;background:#0ea5a4;color:#03111a;font-weight:700;">ThunderBuddies</div>
+                <div id="chat-messages" style="flex:1;padding:12px;overflow:auto;background:#f7fafc;"></div>
+                <form id="chat-form" style="display:flex;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:#fff;">
+                    <input id="chat-input" type="text" placeholder="Ask me about your finances..." style="flex:1;padding:8px;border-radius:8px;border:1px solid #cbd5e1;" />
+                    <button style="background:#0ea5a4;border:none;color:#03111a;padding:8px 12px;border-radius:8px;">Send</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            (function(){
+                const toggle = document.getElementById('chat-toggle');
+                const panel = document.getElementById('chat-panel');
+                const form = document.getElementById('chat-form');
+                const input = document.getElementById('chat-input');
+                const messages = document.getElementById('chat-messages');
+
+                toggle.addEventListener('click', ()=>{
+                    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+                });
+
+                function appendMessage(text, cls='bot'){
+                    const el = document.createElement('div');
+                    el.style.marginBottom='8px';
+                    el.style.padding='8px';
+                    el.style.borderRadius='8px';
+                    el.style.background = cls==='user' ? '#0ea5a4' : '#fff';
+                    el.style.color = cls==='user' ? '#03111a' : '#111';
+                    el.textContent = text;
+                    messages.appendChild(el);
+                    messages.scrollTop = messages.scrollHeight;
+                }
+
+                form.addEventListener('submit', async (e)=>{
+                    e.preventDefault();
+                    const text = input.value.trim();
+                    if (!text) return;
+                    appendMessage(text,'user');
+                    input.value = '';
+                    appendMessage('Thinking...','bot');
+
+                    try{
+                        const res = await fetch('http://127.0.0.1:8000/openai/chat', {
+                            method:'POST',
+                            headers:{'Content-Type':'application/json'},
+                            body: JSON.stringify({ message: text, conversation: [] })
+                        });
+                        const data = await res.json();
+                        // replace last bot message
+                        const botEls = Array.from(messages.children).filter(n=>n.textContent==='Thinking...');
+                        if (botEls.length) botEls[botEls.length-1].textContent = data.reply || 'No reply';
+                    }catch(err){
+                        appendMessage('Error: ' + err.message,'bot');
+                    }
+                });
+            })();
+        </script>
     <!-- Main Content -->
     <div class="main-content">
         <!-- Dashboard Page -->
