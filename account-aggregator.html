@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Aggregator - Afinity</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        .dark-mode {
+            --primary: #5a75f5;
+            --primary-dark: #4a65e5;
+            --secondary: #8a29d7;
+            --success: #6cd9f9;
+            --danger: #ff4785;
+            --warning: #ffa64c;
+            --info: #6aa5ff;
+            --light: #1a1d23;
+            --dark: #f8f9fa;
+            --gray: #a0a5ad;
+            --light-gray: #2a2f3b;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            background: white;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text span:first-child {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo-text .tagline {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Theme Toggle Switch */
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .theme-toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: var(--transition);
+            border-radius: 34px;
+        }
+
+        .theme-toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+
+        input:checked + .theme-toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .theme-toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .theme-toggle-slider i {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: var(--warning);
+        }
+
+        .theme-toggle-slider .fa-sun {
+            left: 8px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .theme-toggle-slider .fa-moon {
+            right: 8px;
+            opacity: 1;
+            transition: var(--transition);
+        }
+
+        input:checked + .theme-toggle-slider .fa-sun {
+            opacity: 1;
+        }
+
+        input:checked + .theme-toggle-slider .fa-moon {
+            opacity: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 600px;
+        }
+
+        /* Aggregator Container */
+        .aggregator-container {
+            background: var(--light);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+        }
+
+        .aggregator-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .aggregator-header h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .connect-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .connect-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Banks Grid */
+        .banks-grid {
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .bank-card {
+            background: var(--light);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+        }
+
+        .bank-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow);
+        }
+
+        .bank-logo {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .bank-info {
+            flex: 1;
+        }
+
+        .bank-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .bank-info p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .bank-connected {
+            font-size: 0.8rem;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .bank-balance {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .bank-disconnect {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .bank-disconnect:hover {
+            transform: scale(1.2);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--light-gray);
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Financial Data */
+        .financial-data {
+            padding: 1.5rem;
+            border-top: 1px solid var(--light-gray);
+        }
+
+        .financial-data h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .data-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-card {
+            background: var(--light);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .data-card h4 {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .data-card .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .financial-data h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--light);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            border: 1px solid var(--light-gray);
+        }
+
+        .transaction-item:hover {
+            background: var(--light-gray);
+            box-shadow: var(--box-shadow);
+        }
+
+        .transaction-info h4 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .transaction-info p {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .amount.credit {
+            color: var(--success);
+        }
+
+        .amount.debit {
+            color: var(--danger);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            display: none;
+        }
+
+        .modal {
+            background: var(--light);
+            border-radius: var(--border-radius);
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--light-gray);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            transition: var(--transition);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--success);
+        }
+
+        .copyright {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header-controls {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .data-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .banks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .data-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .aggregator-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-img">A</div>
+                    <div class="logo-text">
+                        <span>Afinity</span>
+                        <span class="tagline">THINK.SAVE.GROW</span>
+                    </div>
+                </div>
+                <div class="header-controls">
+                    <div class="theme-toggle-container">
+                        <span class="theme-toggle-label">Dark Mode</span>
+                        <label class="theme-toggle">
+                            <input type="checkbox" id="themeToggle">
+                            <span class="theme-toggle-slider">
+                                <i class="fas fa-sun"></i>
+                                <i class="fas fa-moon"></i>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar">JD</div>
+                        <div class="user-details">
+                            <h3>John Doe</h3>
+                            <p>Premium Member</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="main-content">
+            <div class="page-header">
+                <h1>Account Aggregator</h1>
+                <p>Securely connect your bank accounts and view all your financial data in one place.</p>
+            </div>
+            
+            <div class="aggregator-container">
+                <div class="aggregator-header">
+                    <h2>Connected Banks</h2>
+                    <button class="connect-btn" id="connectBankBtn">
+                        <i class="fas fa-plus"></i>
+                        Connect Bank
+                    </button>
+                </div>
+                
+                <div class="banks-grid" id="banksGrid">
+                    <!-- Banks will be dynamically added here -->
+                </div>
+                
+                <div class="financial-data" id="financialData" style="display: none;">
+                    <h2>Financial Overview</h2>
+                    <div class="data-cards">
+                        <div class="data-card">
+                            <h4>Total Balance</h4>
+                            <div class="amount" id="totalBalance">₹0</div>
+                        </div>
+                        <div class="data-card">
+                            <h4>Income (This Month)</h4>
+                            <div class="amount" id="monthlyIncome">₹0</div>
+                        </div>
+                        <div class="data-card">
+                            <h4>Expenses (This Month)</h4>
+                            <div class="amount" id="monthlyExpenses">₹0</div>
+                        </div>
+                        <div class="data-card">
+                            <h4>Savings Rate</h4>
+                            <div class="amount" id="savingsRate">0%</div>
+                        </div>
+                    </div>
+                    
+                    <h3>Recent Transactions</h3>
+                    <div class="transactions-list" id="transactionsList">
+                        <!-- Transactions will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <div class="logo-img">A</div>
+                    <div class="logo-text">
+                        <span>Afinity</span>
+                        <span class="tagline">THINK.SAVE.GROW</span>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Support</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2023 Afinity. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Connect Bank Modal -->
+    <div class="modal-overlay" id="connectBankModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Connect Your Bank Account</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="bankSelect">Select Bank</label>
+                    <select id="bankSelect" class="form-control">
+                        <option value="">Choose your bank</option>
+                        <option value="hdfc">HDFC Bank</option>
+                        <option value="icici">ICICI Bank</option>
+                        <option value="sbi">State Bank of India</option>
+                        <option value="axis">Axis Bank</option>
+                        <option value="kotak">Kotak Mahindra Bank</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="accountNumber">Account Number</label>
+                    <input type="text" id="accountNumber" placeholder="Enter your account number" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="ifscCode">IFSC Code</label>
+                    <input type="text" id="ifscCode" placeholder="Enter IFSC code" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="consent">Consent for Data Sharing</label>
+                    <div style="display: flex; align-items: flex-start; gap: 10px; margin-top: 10px;">
+                        <input type="checkbox" id="consent" style="width: auto;">
+                        <label for="consent" style="font-weight: normal;">I agree to share my financial data with Afinity for providing personalized financial insights. My data will be securely encrypted and never shared with third parties without my consent.</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="connectBtn">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const connectBankBtn = document.getElementById('connectBankBtn');
+        const connectBankModal = document.getElementById('connectBankModal');
+        const modalClose = document.getElementById('modalClose');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const connectBtn = document.getElementById('connectBtn');
+        const banksGrid = document.getElementById('banksGrid');
+        const financialData = document.getElementById('financialData');
+        const totalBalance = document.getElementById('totalBalance');
+        const monthlyIncome = document.getElementById('monthlyIncome');
+        const monthlyExpenses = document.getElementById('monthlyExpenses');
+        const savingsRate = document.getElementById('savingsRate');
+        const transactionsList = document.getElementById('transactionsList');
+
+        // App State
+        let connectedBanks = [];
+        let transactions = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        function initializeApp() {
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('afinityTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeToggle.checked = true;
+            }
+            
+            // Load connected banks from localStorage
+            const savedBanks = localStorage.getItem('afinityBanks');
+            if (savedBanks) {
+                connectedBanks = JSON.parse(savedBanks);
+                updateBanksGrid();
+            }
+            
+            // Load transactions from localStorage
+            const savedTransactions = localStorage.getItem('afinityTransactions');
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+                updateTransactionsList();
+            }
+        }
+
+        function setupEventListeners() {
+            // Theme toggle
+            themeToggle.addEventListener('change', toggleTheme);
+            
+            // Account aggregator
+            connectBankBtn.addEventListener('click', showConnectBankModal);
+            modalClose.addEventListener('click', hideConnectBankModal);
+            cancelBtn.addEventListener('click', hideConnectBankModal);
+            connectBtn.addEventListener('click', connectBankAccount);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target === connectBankModal) {
+                    hideConnectBankModal();
+                }
+            });
+        }
+
+        function toggleTheme() {
+            if (themeToggle.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('afinityTheme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('afinityTheme', 'light');
+            }
+        }
+
+        function showConnectBankModal() {
+            connectBankModal.style.display = 'flex';
+        }
+
+        function hideConnectBankModal() {
+            connectBankModal.style.display = 'none';
+            // Reset form
+            document.getElementById('bankSelect').value = '';
+            document.getElementById('accountNumber').value = '';
+            document.getElementById('ifscCode').value = '';
+            document.getElementById('consent').checked = false;
+        }
+
+        function connectBankAccount() {
+            const bankSelect = document.getElementById('bankSelect').value;
+            const accountNumber = document.getElementById('accountNumber').value;
+            const ifscCode = document.getElementById('ifscCode').value;
+            const consent = document.getElementById('consent').checked;
+            
+            if (!bankSelect || !accountNumber || !ifscCode) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            if (!consent) {
+                alert('Please consent to data sharing to connect your bank account');
+                return;
+            }
+            
+            // In a real app, this would be an API call to connect to the bank
+            // For demo purposes, we'll simulate a successful connection
+            
+            const bankInfo = {
+                id: Date.now(),
+                name: getBankName(bankSelect),
+                code: bankSelect,
+                accountNumber: accountNumber.slice(-4), // Store only last 4 digits for display
+                connectedDate: new Date().toLocaleDateString(),
+                balance: Math.floor(Math.random() * 500000) + 10000 // Random balance for demo
+            };
+            
+            connectedBanks.push(bankInfo);
+            localStorage.setItem('afinityBanks', JSON.stringify(connectedBanks));
+            
+            // Generate sample transactions for the new account
+            generateSampleTransactions(bankInfo.id);
+            
+            updateBanksGrid();
+            hideConnectBankModal();
+            
+            alert(`Successfully connected your ${bankInfo.name} account!`);
+        }
+
+        function getBankName(code) {
+            const banks = {
+                'hdfc': 'HDFC Bank',
+                'icici': 'ICICI Bank',
+                'sbi': 'State Bank of India',
+                'axis': 'Axis Bank',
+                'kotak': 'Kotak Mahindra Bank'
+            };
+            
+            return banks[code] || 'Unknown Bank';
+        }
+
+        function updateBanksGrid() {
+            if (connectedBanks.length === 0) {
+                banksGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-university"></i>
+                        <h3>No Banks Connected</h3>
+                        <p>Connect your bank accounts to view your financial data in one place.</p>
+                    </div>
+                `;
+                financialData.style.display = 'none';
+                return;
+            }
+            
+            banksGrid.innerHTML = '';
+            
+            connectedBanks.forEach(bank => {
+                const bankCard = document.createElement('div');
+                bankCard.className = 'bank-card';
+                bankCard.innerHTML = `
+                    <div class="bank-logo">${bank.name.charAt(0)}</div>
+                    <div class="bank-info">
+                        <h4>${bank.name}</h4>
+                        <p>Account ending with ${bank.accountNumber}</p>
+                        <span class="bank-connected">Connected on ${bank.connectedDate}</span>
+                    </div>
+                    <div class="bank-balance">₹${bank.balance.toLocaleString()}</div>
+                    <button class="bank-disconnect" data-id="${bank.id}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                banksGrid.appendChild(bankCard);
+            });
+            
+            // Add event listeners to disconnect buttons
+            document.querySelectorAll('.bank-disconnect').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bankId = parseInt(this.getAttribute('data-id'));
+                    disconnectBank(bankId);
+                });
+            });
+            
+            // Show financial data
+            updateFinancialOverview();
+            financialData.style.display = 'block';
+        }
+
+        function disconnectBank(bankId) {
+            if (confirm('Are you sure you want to disconnect this bank account?')) {
+                connectedBanks = connectedBanks.filter(bank => bank.id !== bankId);
+                localStorage.setItem('afinityBanks', JSON.stringify(connectedBanks));
+                
+                // Remove transactions for this bank
+                transactions = transactions.filter(t => t.bankId !== bankId);
+                localStorage.setItem('afinityTransactions', JSON.stringify(transactions));
+                
+                updateBanksGrid();
+                updateTransactionsList();
+            }
+        }
+
+        function generateSampleTransactions(bankId) {
+            const sampleTransactions = [
+                { type: 'credit', description: 'Salary Credit', amount: 64200, date: '2023-10-01', category: 'Income' },
+                { type: 'debit', description: 'Rent Payment', amount: 15000, date: '2023-10-02', category: 'Housing' },
+                { type: 'debit', description: 'Grocery Shopping', amount: 4500, date: '2023-10-05', category: 'Food' },
+                { type: 'debit', description: 'Electricity Bill', amount: 2450, date: '2023-10-07', category: 'Utilities' },
+                { type: 'debit', description: 'Dining Out', amount: 1200, date: '2023-10-10', category: 'Entertainment' },
+                { type: 'debit', description: 'Fuel', amount: 2000, date: '2023-10-12', category: 'Transportation' },
+                { type: 'credit', description: 'Freelance Work', amount: 8000, date: '2023-10-15', category: 'Income' },
+                { type: 'debit', description: 'Online Shopping', amount: 3500, date: '2023-10-18', category: 'Shopping' },
+                { type: 'debit', description: 'Mobile Recharge', amount: 299, date: '2023-10-20', category: 'Utilities' },
+                { type: 'debit', description: 'Movie Tickets', amount: 600, date: '2023-10-22', category: 'Entertainment' }
+            ];
+            
+            sampleTransactions.forEach(transaction => {
+                transactions.push({
+                    ...transaction,
+                    id: Date.now() + Math.random(),
+                    bankId: bankId
+                });
+            });
+            
+            localStorage.setItem('afinityTransactions', JSON.stringify(transactions));
+            updateTransactionsList();
+        }
+
+        function updateFinancialOverview() {
+            if (connectedBanks.length === 0) return;
+            
+            // Calculate total balance
+            const balance = connectedBanks.reduce((sum, bank) => sum + bank.balance, 0);
+            totalBalance.textContent = `₹${balance.toLocaleString()}`;
+            
+            // Calculate monthly income and expenses from transactions
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            const monthlyTransactions = transactions.filter(t => {
+                const transactionDate = new Date(t.date);
+                return transactionDate.getMonth() === currentMonth && 
+                       transactionDate.getFullYear() === currentYear;
+            });
+            
+            const income = monthlyTransactions
+                .filter(t => t.type === 'credit')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const expenses = monthlyTransactions
+                .filter(t => t.type === 'debit')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            monthlyIncome.textContent = `₹${income.toLocaleString()}`;
+            monthlyExpenses.textContent = `₹${expenses.toLocaleString()}`;
+            
+            // Calculate savings rate
+            const savingsRateValue = income > 0 ? ((income - expenses) / income * 100).toFixed(1) : 0;
+            savingsRate.textContent = `${savingsRateValue}%`;
+        }
+
+        function updateTransactionsList() {
+            if (transactions.length === 0) {
+                transactionsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <h3>No Transactions</h3>
+                        <p>Your transactions will appear here once you connect bank accounts.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            transactionsList.innerHTML = '';
+            
+            sortedTransactions.slice(0, 10).forEach(transaction => { // Show only last 10 transactions
+                const transactionEl = document.createElement('div');
+                transactionEl.className = 'transaction-item';
+                
+                const amountClass = transaction.type === 'credit' ? 'amount credit' : 'amount debit';
+                const amountSign = transaction.type === 'credit' ? '+' : '-';
+                
+                transactionEl.innerHTML = `
+                    <div class="transaction-info">
+                        <h4>${transaction.description}</h4>
+                        <p>${transaction.date} • ${transaction.category}</p>
+                    </div>
+                    <div class="${amountClass}">
+                        ${amountSign}₹${transaction.amount.toLocaleString()}
+                    </div>
+                `;
+                
+                transactionsList.appendChild(transactionEl);
+            });
+        }
+    </script>
+</body>
+</html>
