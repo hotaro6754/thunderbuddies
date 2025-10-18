@@ -575,6 +575,23 @@
                 width: 300px;
                 height: 400px;
             }
+            .signup-btn {
+             background-color: white;
+             color: var(--primary);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 0.5rem;
+        }
+
+.signup-btn:hover {
+    background-color: var(--accent);
+    color: white;
+    transform: translateY(-2px);
+}
         }
     </style>
 </head>
@@ -593,6 +610,7 @@
                 <li><a href="#" class="nav-link" data-page="analytics">Analytics</a></li>
             </ul>
         </nav>
+        <button class="signup-btn" id="signupBtn">Sign Up</button>
         <div class="header-actions">
             <button class="theme-toggle" id="themeToggle">
                 <i class="fas fa-moon"></i>
@@ -631,12 +649,44 @@
                         <canvas id="savingsChart"></canvas>
                     </div>
                 </div>
+                <!-- Signup Page -->
+<section id="signup" class="page">
+    <div class="auth-container">
+        <div class="auth-form">
+            <h2><i class="fas fa-user-plus"></i> Create Your Account</h2>
+            <div class="form-group">
+                <label for="fullname">Full Name</label>
+                <input type="text" id="fullname" placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="newUsername">Username</label>
+                <input type="text" id="newUsername" placeholder="Choose a username">
+            </div>
+            <div class="form-group">
+                <label for="newPassword">Password</label>
+                <input type="password" id="newPassword" placeholder="Create a password">
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password">
+            </div>
+            <button class="auth-submit" id="signupSubmit">Sign Up</button>
+            <div class="form-footer">
+                <p>Already have an account? <a href="#" id="toLoginLink">Login</a></p>
+            </div>
+        </div>
+    </div>
+</section>
                 
                 <div class="card">
                     <h3><i class="fas fa-newspaper"></i> Financial News</h3>
                     <div id="news-container">
                         <div class="news-item">
-                            <h4>Stock Markets Reach All-Time High</h4>
+                            <h4>Stock Markets Reach All-Time High</h4> 
                             <p>Global indices surge as economic recovery continues...</p>
                         </div>
                         <div class="news-item">
@@ -661,23 +711,23 @@
                 <div class="calculator">
                     <h3><i class="fas fa-calculator"></i> Budget Calculator</h3>
                     <div class="form-group">
-                        <label for="salary">Monthly Salary ($)</label>
+                        <label for="salary">Monthly Salary (₹)</label>
                         <input type="number" id="salary" placeholder="Enter your monthly salary">
                     </div>
                     <div class="form-group">
-                        <label for="rent">Rent/Mortgage ($)</label>
+                        <label for="rent">Rent/Mortgage (₹)</label>
                         <input type="number" id="rent" placeholder="Enter rent/mortgage">
                     </div>
                     <div class="form-group">
-                        <label for="utilities">Utilities ($)</label>
+                        <label for="utilities">Utilities (₹)</label>
                         <input type="number" id="utilities" placeholder="Enter utilities cost">
                     </div>
                     <div class="form-group">
-                        <label for="groceries">Groceries ($)</label>
+                        <label for="groceries">Groceries (₹)</label>
                         <input type="number" id="groceries" placeholder="Enter groceries cost">
                     </div>
                     <div class="form-group">
-                        <label for="entertainment">Entertainment ($)</label>
+                        <label for="entertainment">Entertainment (₹)</label>
                         <input type="number" id="entertainment" placeholder="Enter entertainment cost">
                     </div>
                     <button id="calculateBudget">Calculate Budget</button>
@@ -693,7 +743,7 @@
                 <div class="calculator">
                     <h3><i class="fas fa-chart-pie"></i> SIP Calculator</h3>
                     <div class="form-group">
-                        <label for="sipAmount">Monthly Investment ($)</label>
+                        <label for="sipAmount">Monthly Investment (₹)</label>
                         <input type="number" id="sipAmount" placeholder="Enter monthly investment">
                     </div>
                     <div class="form-group">
@@ -717,7 +767,7 @@
                 <div class="calculator">
                     <h3><i class="fas fa-home"></i> Loan Calculator</h3>
                     <div class="form-group">
-                        <label for="loanAmount">Loan Amount ($)</label>
+                        <label for="loanAmount">Loan Amount (₹)</label>
                         <input type="number" id="loanAmount" placeholder="Enter loan amount">
                     </div>
                     <div class="form-group">
@@ -960,8 +1010,7 @@
         
         function addMessage(text, sender) {
             const messageDiv = document.createElement('div');
-            // add 'message' and either 'user-message' or 'bot-message'
-            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.classList.add('message', `${sender}-message`);
             messageDiv.textContent = text;
             chatbotMessages.appendChild(messageDiv);
             chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
@@ -1250,6 +1299,80 @@
                     document.getElementById('budgetResult').classList.add('active');
                 }
             });
+            // Signup functionality
+const signupBtn = document.getElementById('signupBtn');
+const signupPage = document.getElementById('signup');
+const signupSubmit = document.getElementById('signupSubmit');
+const toLoginLink = document.getElementById('toLoginLink');
+
+// Initialize users array in localStorage if not exists
+let users = JSON.parse(localStorage.getItem('afinityUsers')) || [];
+
+// Signup button click handler
+signupBtn.addEventListener('click', () => {
+    pages.forEach(page => page.classList.remove('active'));
+    signupPage.classList.add('active');
+});
+
+// Navigate to login from signup
+toLoginLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    pages.forEach(page => page.classList.remove('active'));
+    loginPage.classList.add('active');
+});
+
+// Signup form submission
+signupSubmit.addEventListener('click', () => {
+    const fullname = document.getElementById('fullname').value;
+    const email = document.getElementById('email').value;
+    const username = document.getElementById('newUsername').value;
+    const password = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (fullname && email && username && password && confirmPassword) {
+        if (password !== confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+        
+        // Check if username already exists
+        if (users.find(u => u.username === username)) {
+            alert('Username already exists');
+            return;
+        }
+        
+        // Check if email already exists
+        if (users.find(u => u.email === email)) {
+            alert('Email already registered');
+            return;
+        }
+        
+        // Add new user
+        users.push({ 
+            fullname, 
+            email, 
+            username, 
+            password,
+            joinDate: new Date().toISOString()
+        });
+        localStorage.setItem('afinityUsers', JSON.stringify(users));
+        
+        alert('Account created successfully! Please login.');
+        
+        // Redirect to login page
+        pages.forEach(page => page.classList.remove('active'));
+        loginPage.classList.add('active');
+        
+        // Reset form
+        document.getElementById('fullname').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+    } else {
+        alert('Please fill all fields');
+    }
+});
             
             document.getElementById('calculateSIP').addEventListener('click', function() {
                 const amount = parseFloat(document.getElementById('sipAmount').value) || 0;

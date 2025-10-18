@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afinity - AI Finance Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a8a;
+            --secondary: #0f172a;
+            --accent: #60a5fa;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-color: #0f172a;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #f1f5f9;
+            --sidebar-active: #3b82f6;
+        }
+
+        .dark-mode {
+            --primary: #3b82f6;
+            --primary-light: #60a5fa;
+            --primary-dark: #1e40af;
+            --secondary: #0f172a;
+            --accent: #93c5fd;
+            --text: #f1f5f9;
+            --text-light: #cbd5e1;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-color: #f1f5f9;
+            --sidebar-bg: #0f172a;
+            --sidebar-text: #f1f5f9;
+            --sidebar-active: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s, transform 0.3s;
+            color: var(--font-color);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+            color: var(--sidebar-active);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 1rem 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-details h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-details p {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.75rem 1rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--sidebar-active);
+            color: white;
+        }
+
+        .sidebar-menu i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            max-width: calc(100% - 250px);
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Dashboard Page */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .amount {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chart-container {
+            height: 250px;
+            margin-top: 1rem;
+        }
+
+        .goals-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .goal-item {
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: var(--bg);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .goal-progress {
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .goal-progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 4px;
+        }
+
+        .goal-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Accounts Page */
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .account-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .account-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .account-type {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .account-balance {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .account-number {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Budget Page */
+        .budget-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .budget-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .budget-category {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--bg);
+            border-radius: 8px;
+        }
+
+        .category-info h4 {
+            margin-bottom: 0.25rem;
+        }
+
+        .category-info p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .category-amount {
+            font-weight: 700;
+        }
+
+        .category-progress {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .category-progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+
+        /* Transactions Page */
+        .transactions-container {
+            margin-top: 2rem;
+        }
+
+        .transaction-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background-color: var(--bg);
+            border: 1px solid var(--text-light);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .transaction-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .transaction-details h4 {
+            margin-bottom: 0.25rem;
+        }
+
+        .transaction-details p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+        }
+
+        .transaction-amount.income {
+            color: var(--success);
+        }
+
+        .transaction-amount.expense {
+            color: var(--danger);
+        }
+
+        /* Savings Page */
+        .savings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .savings-goal {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .savings-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .summary-card {
+            background-color: var(--bg);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .summary-card h4 {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Investments Page */
+        .investment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .investment-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .investment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .investment-card h4 {
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .investment-card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .investment-card .return {
+            margin-top: 1rem;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* Bills Page */
+        .bills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .bill-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .bill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .bill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .bill-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .status-paid {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .bill-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .bill-due {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Settings Page */
+        .settings-container {
+            margin-top: 2rem;
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-section h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .settings-option p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Calculators Page */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .calculator {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .calculator:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .calculator h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .calculator input, .calculator select {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--text-light);
+            border-radius: 8px;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        .calculator button {
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .calculator button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .calculator button.reset {
+            background-color: var(--text-light);
+        }
+
+        .calculator button.reset:hover {
+            background-color: var(--danger);
+        }
+
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--bg);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Analytics Page */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        /* Login/Signup Pages */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .auth-form {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px var(--shadow);
+            width: 100%;
+            max-width: 450px;
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--text-light);
+            border-radius: 8px;
+            background-color: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .auth-submit {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-submit:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Floating Chatbot */
+        .chatbot-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .chatbot-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+            background-color: var(--primary-dark);
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 350px;
+            height: 450px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px var(--shadow);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chatbot-window.active {
+            display: flex;
+            animation: slideInUp 0.3s ease-out;
+        }
+
+        .chatbot-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--bg);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid var(--text-light);
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--text-light);
+            border-radius: 20px;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        .chatbot-input button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+                max-width: calc(100% - 200px);
+            }
+            
+            .dashboard-grid, .budget-grid, .savings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .calculator-grid, .investment-grid, .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chatbot-window {
+                width: 300px;
+                height: 400px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 100%;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                z-index: 101;
+                background-color: var(--primary);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.5rem;
+                font-size: 1.2rem;
+                cursor: pointer;
+            }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .time-btn {
+            padding: 0.25rem 0.75rem;
+            background-color: var(--bg);
+            border: 1px solid var(--text-light);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .time-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .view-all {
+            font-size: 0.9rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-robot"></i>
+            <span>Afinity</span>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">JD</div>
+            <div class="user-details">
+                <h3>John Doe</h3>
+                <p>Premium Member</p>
+            </div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="#" class="sidebar-link active" data-page="dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="#" class="sidebar-link" data-page="accounts"><i class="fas fa-wallet"></i> Accounts</a></li>
+            <li><a href="#" class="sidebar-link" data-page="budget"><i class="fas fa-chart-pie"></i> Budget</a></li>
+            <li><a href="#" class="sidebar-link" data-page="transactions"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+            <li><a href="#" class="sidebar-link" data-page="savings"><i class="fas fa-piggy-bank"></i> Savings</a></li>
+            <li><a href="#" class="sidebar-link" data-page="investments"><i class="fas fa-chart-line"></i> Investments</a></li>
+            <li><a href="#" class="sidebar-link" data-page="bills"><i class="fas fa-file-invoice-dollar"></i> Bills</a></li>
+            <li><a href="#" class="sidebar-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+                <span>Dark Mode</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Page -->
+        <section id="dashboard" class="page active">
+            <div class="dashboard-header">
+                <h1>Dashboard</h1>
+                <div class="header-actions">
+                    <button class="login-btn" id="loginBtn">Login</button>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Monthly Income</h3>
+                    <div class="amount">₹64,200</div>
+                    <div class="change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>2.1% from last month</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Monthly Expenses</h3>
+                    <div class="amount">₹41,800</div>
+                    <div class="change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>2.1% from last month</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Monthly Savings</h3>
+                    <div class="amount">₹22,400</div>
+                    <div class="change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12.5% from last month</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>
+                        Income vs Expenses
+                        <div class="time-filter">
+                            <button class="time-btn active">6M</button>
+                            <button class="time-btn">1Y</button>
+                            <button class="time-btn">Custom</button>
+                        </div>
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="incomeExpenseChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>
+                        Financial Goals
+                        <a href="#" class="view-all">View All</a>
+                    </h3>
+                    <div class="goals-container">
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4>Emergency Fund</h4>
+                                <span>₹70,000/₹1,00,000</span>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-bar" style="width: 70%"></div>
+                            </div>
+                            <div class="goal-details">
+                                <span>70% Completed</span>
+                                <span>₹30,000 left</span>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4>House Down Payment</h4>
+                                <span>₹2,25,000/₹5,00,000</span>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-bar" style="width: 45%"></div>
+                            </div>
+                            <div class="goal-details">
+                                <span>45% Completed</span>
+                                <span>₹2,75,000 left</span>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4>Retirement</h4>
+                                <span>₹6,00,000/₹10,00,000</span>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-bar" style="width: 60%"></div>
+                            </div>
+                            <div class="goal-details">
+                                <span>60% Completed</span>
+                                <span>₹4,00,000 left</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accounts Page -->
+        <section id="accounts" class="page">
+            <div class="dashboard-header">
+                <h1>Accounts</h1>
+            </div>
+            <p>Manage your bank accounts, credit cards, and investments in one place.</p>
+            
+            <div class="accounts-grid">
+                <div class="account-card">
+                    <div class="account-header">
+                        <h3>Savings Account</h3>
+                        <span class="account-type">HDFC Bank</span>
+                    </div>
+                    <div class="account-balance">₹1,85,420</div>
+                    <div class="account-number">XXXX XXXX 4567</div>
+                </div>
+                
+                <div class="account-card">
+                    <div class="account-header">
+                        <h3>Current Account</h3>
+                        <span class="account-type">ICICI Bank</span>
+                    </div>
+                    <div class="account-balance">₹72,150</div>
+                    <div class="account-number">XXXX XXXX 7890</div>
+                </div>
+                
+                <div class="account-card">
+                    <div class="account-header">
+                        <h3>Credit Card</h3>
+                        <span class="account-type">SBI Card</span>
+                    </div>
+                    <div class="account-balance">-₹12,450</div>
+                    <div class="account-number">XXXX XXXX 2345</div>
+                </div>
+                
+                <div class="account-card">
+                    <div class="account-header">
+                        <h3>Investment Portfolio</h3>
+                        <span class="account-type">Demat Account</span>
+                    </div>
+                    <div class="account-balance">₹5,67,800</div>
+                    <div class="account-number">ZERODHA</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Budget Page -->
+        <section id="budget" class="page">
+            <div class="dashboard-header">
+                <h1>Budget</h1>
+            </div>
+            <p>Track your spending and manage your budget effectively.</p>
+            
+            <div class="budget-grid">
+                <div class="card">
+                    <h3>Budget Overview</h3>
+                    <div class="budget-categories">
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <h4>Housing</h4>
+                                <p>₹15,000 / ₹20,000</p>
+                                <div class="category-progress">
+                                    <div class="category-progress-bar" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            <div class="category-amount">75%</div>
+                        </div>
+                        
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <h4>Food & Dining</h4>
+                                <p>₹8,000 / ₹10,000</p>
+                                <div class="category-progress">
+                                    <div class="category-progress-bar" style="width: 80%"></div>
+                                </div>
+                            </div>
+                            <div class="category-amount">80%</div>
+                        </div>
+                        
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <h4>Transportation</h4>
+                                <p>₹4,500 / ₹6,000</p>
+                                <div class="category-progress">
+                                    <div class="category-progress-bar" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            <div class="category-amount">75%</div>
+                        </div>
+                        
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <h4>Entertainment</h4>
+                                <p>₹3,000 / ₹5,000</p>
+                                <div class="category-progress">
+                                    <div class="category-progress-bar" style="width: 60%"></div>
+                                </div>
+                            </div>
+                            <div class="category-amount">60%</div>
+                        </div>
+                        
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <h4>Utilities</h4>
+                                <p>₹2,500 / ₹3,500</p>
+                                <div class="category-progress">
+                                    <div class="category-progress-bar" style="width: 71%"></div>
+                                </div>
+                            </div>
+                            <div class="category-amount">71%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Budget Calculator</h3>
+                    <div class="calculator">
+                        <div class="form-group">
+                            <label for="salary">Monthly Salary (₹)</label>
+                            <input type="number" id="salary" placeholder="Enter your monthly salary">
+                        </div>
+                        <div class="form-group">
+                            <label for="rent">Rent/Mortgage (₹)</label>
+                            <input type="number" id="rent" placeholder="Enter rent/mortgage">
+                        </div>
+                        <div class="form-group">
+                            <label for="utilities">Utilities (₹)</label>
+                            <input type="number" id="utilities" placeholder="Enter utilities cost">
+                        </div>
+                        <div class="form-group">
+                            <label for="groceries">Groceries (₹)</label>
+                            <input type="number" id="groceries" placeholder="Enter groceries cost">
+                        </div>
+                        <div class="form-group">
+                            <label for="entertainment">Entertainment (₹)</label>
+                            <input type="number" id="entertainment" placeholder="Enter entertainment cost">
+                        </div>
+                        <button id="calculateBudget">Calculate Budget</button>
+                        <button class="reset" id="resetBudget">Reset</button>
+                        <div class="result" id="budgetResult">
+                            <h4>Your Budget Summary</h4>
+                            <div class="chart-container">
+                                <canvas id="budgetChart"></canvas>
+                            </div>
+                            <div id="budgetSuggestions"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transactions Page -->
+        <section id="transactions" class="page">
+            <div class="dashboard-header">
+                <h1>Transactions</h1>
+            </div>
+            <p>View and manage your transaction history.</p>
+            
+            <div class="transactions-container">
+                <div class="transaction-filters">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Income</button>
+                    <button class="filter-btn">Expenses</button>
+                    <button class="filter-btn">This Month</button>
+                    <button class="filter-btn">Last Month</button>
+                </div>
+                
+                <div class="transaction-list">
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Amazon Purchase</h4>
+                                <p>15 Oct 2023 • Shopping</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount expense">-₹2,499</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Salary Credit</h4>
+                                <p>10 Oct 2023 • Income</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount income">+₹64,200</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Restaurant Bill</h4>
+                                <p>8 Oct 2023 • Dining</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount expense">-₹1,850</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon">
+                                <i class="fas fa-gas-pump"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Fuel Charge</h4>
+                                <p>5 Oct 2023 • Transportation</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount expense">-₹3,200</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Rent Payment</h4>
+                                <p>1 Oct 2023 • Housing</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount expense">-₹15,000</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Savings Page -->
+        <section id="savings" class="page">
+            <div class="dashboard-header">
+                <h1>Savings</h1>
+            </div>
+            <p>Track your savings goals and progress.</p>
+            
+            <div class="savings-grid">
+                <div class="card">
+                    <h3>Savings Goals</h3>
+                    <div class="savings-goal">
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4>Emergency Fund</h4>
+                                <span>₹70,000/₹1,00,000</span>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-bar" style="width: 70%"></div>
+                            </div>
+                            <div class="goal-details">
+                                <span>70% Completed</span>
+                                <span>₹30,000 left</span>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4>Vacation Fund</h4>
+                                <span>₹25,000/₹50,000</span>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-bar" style="width: 50%"></div>
+                            </div>
+                            <div class="goal-details">
+                                <span>50% Completed</span>
+                                <span>₹25,000 left</span>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4>New Car Fund</h4>
+                                <span>₹1,50,000/₹5,00,000</span>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-bar" style="width: 30%"></div>
+                            </div>
+                            <div class="goal-details">
+                                <span>30% Completed</span>
+                                <span>₹3,50,000 left</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Savings Summary</h3>
+                    <div class="savings-summary">
+                        <div class="summary-card">
+                            <h4>Monthly Savings</h4>
+                            <div class="amount">₹22,400</div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <h4>Total Savings</h4>
+                            <div class="amount">₹2,45,000</div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <h4>Savings Rate</h4>
+                            <div class="amount">34.9%</div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <h4>YTD Growth</h4>
+                            <div class="amount">12.5%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Investments Page -->
+        <section id="investments" class="page">
+            <div class="dashboard-header">
+                <h1>Investments</h1>
+            </div>
+            <p>Manage your investment portfolio and explore new opportunities.</p>
+            
+            <div class="investment-grid" id="investmentGrid">
+                <!-- Investment cards will be generated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Bills Page -->
+        <section id="bills" class="page">
+            <div class="dashboard-header">
+                <h1>Bills</h1>
+            </div>
+            <p>Track and manage your upcoming bills and payments.</p>
+            
+            <div class="bills-grid">
+                <div class="bill-card">
+                    <div class="bill-header">
+                        <h3>Electricity Bill</h3>
+                        <span class="bill-status status-pending">Due in 5 days</span>
+                    </div>
+                    <div class="bill-amount">₹2,450</div>
+                    <div class="bill-due">Due Date: 25 Oct 2023</div>
+                </div>
+                
+                <div class="bill-card">
+                    <div class="bill-header">
+                        <h3>Internet Bill</h3>
+                        <span class="bill-status status-paid">Paid</span>
+                    </div>
+                    <div class="bill-amount">₹899</div>
+                    <div class="bill-due">Paid on: 10 Oct 2023</div>
+                </div>
+                
+                <div class="bill-card">
+                    <div class="bill-header">
+                        <h3>Credit Card Bill</h3>
+                        <span class="bill-status status-pending">Due in 12 days</span>
+                    </div>
+                    <div class="bill-amount">₹12,450</div>
+                    <div class="bill-due">Due Date: 1 Nov 2023</div>
+                </div>
+                
+                <div class="bill-card">
+                    <div class="bill-header">
+                        <h3>Mobile Recharge</h3>
+                        <span class="bill-status status-pending">Due in 3 days</span>
+                    </div>
+                    <div class="bill-amount">₹299</div>
+                    <div class="bill-due">Due Date: 23 Oct 2023</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section id="settings" class="page">
+            <div class="dashboard-header">
+                <h1>Settings</h1>
+            </div>
+            <p>Customize your Afinity experience.</p>
+            
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Account Settings</h3>
+                    <div class="settings-option">
+                        <div>
+                            <h4>Personal Information</h4>
+                            <p>Update your name, email, and contact details</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div>
+                            <h4>Security</h4>
+                            <p>Change password and enable two-factor authentication</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div>
+                            <h4>Notifications</h4>
+                            <p>Manage how you receive alerts and updates</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Preferences</h3>
+                    <div class="settings-option">
+                        <div>
+                            <h4>Currency</h4>
+                            <p>Set your preferred currency (currently Indian Rupee)</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div>
+                            <h4>Language</h4>
+                            <p>Choose your preferred language</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div>
+                            <h4>Theme</h4>
+                            <p>Switch between light and dark mode</p>
+                        </div>
+                        <button class="theme-toggle" id="settingsThemeToggle">
+                            <i class="fas fa-moon"></i>
+                            <span>Dark Mode</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calculators Page -->
+        <section id="calculators" class="page">
+            <div class="dashboard-header">
+                <h1>Financial Calculators</h1>
+            </div>
+            <p>Use our calculators to plan your finances effectively</p>
+            
+            <div class="calculator-grid">
+                <div class="calculator">
+                    <h3><i class="fas fa-calculator"></i> Budget Calculator</h3>
+                    <div class="form-group">
+                        <label for="salary">Monthly Salary (₹)</label>
+                        <input type="number" id="salary" placeholder="Enter your monthly salary">
+                    </div>
+                    <div class="form-group">
+                        <label for="rent">Rent/Mortgage (₹)</label>
+                        <input type="number" id="rent" placeholder="Enter rent/mortgage">
+                    </div>
+                    <div class="form-group">
+                        <label for="utilities">Utilities (₹)</label>
+                        <input type="number" id="utilities" placeholder="Enter utilities cost">
+                    </div>
+                    <div class="form-group">
+                        <label for="groceries">Groceries (₹)</label>
+                        <input type="number" id="groceries" placeholder="Enter groceries cost">
+                    </div>
+                    <div class="form-group">
+                        <label for="entertainment">Entertainment (₹)</label>
+                        <input type="number" id="entertainment" placeholder="Enter entertainment cost">
+                    </div>
+                    <button id="calculateBudget">Calculate Budget</button>
+                    <button class="reset" id="resetBudget">Reset</button>
+                    <div class="result" id="budgetResult">
+                        <h4>Your Budget Summary</h4>
+                        <div class="chart-container">
+                            <canvas id="budgetChart"></canvas>
+                        </div>
+                        <div id="budgetSuggestions"></div>
+                    </div>
+                </div>
+                
+                <div class="calculator">
+                    <h3><i class="fas fa-chart-pie"></i> SIP Calculator</h3>
+                    <div class="form-group">
+                        <label for="sipAmount">Monthly Investment (₹)</label>
+                        <input type="number" id="sipAmount" placeholder="Enter monthly investment">
+                    </div>
+                    <div class="form-group">
+                        <label for="sipDuration">Investment Period (Years)</label>
+                        <input type="number" id="sipDuration" placeholder="Enter investment period">
+                    </div>
+                    <div class="form-group">
+                        <label for="sipReturn">Expected Annual Return (%)</label>
+                        <input type="number" id="sipReturn" placeholder="Enter expected return">
+                    </div>
+                    <button id="calculateSIP">Calculate SIP</button>
+                    <button class="reset" id="resetSIP">Reset</button>
+                    <div class="result" id="sipResult">
+                        <h4>SIP Projection</h4>
+                        <p id="sipTotal"></p>
+                        <div class="chart-container">
+                            <canvas id="sipChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="calculator">
+                    <h3><i class="fas fa-home"></i> Loan Calculator</h3>
+                    <div class="form-group">
+                        <label for="loanAmount">Loan Amount (₹)</label>
+                        <input type="number" id="loanAmount" placeholder="Enter loan amount">
+                    </div>
+                    <div class="form-group">
+                        <label for="loanInterest">Interest Rate (%)</label>
+                        <input type="number" id="loanInterest" placeholder="Enter interest rate">
+                    </div>
+                    <div class="form-group">
+                        <label for="loanTerm">Loan Term (Years)</label>
+                        <input type="number" id="loanTerm" placeholder="Enter loan term">
+                    </div>
+                    <button id="calculateLoan">Calculate Loan</button>
+                    <button class="reset" id="resetLoan">Reset</button>
+                    <div class="result" id="loanResult">
+                        <h4>Loan Details</h4>
+                        <p id="monthlyPayment"></p>
+                        <p id="totalInterest"></p>
+                        <div class="chart-container">
+                            <canvas id="loanChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Page -->
+        <section id="analytics" class="page">
+            <div class="dashboard-header">
+                <h1>Market Analytics</h1>
+            </div>
+            <p>Detailed analysis of market trends and performance</p>
+            
+            <div class="analytics-grid">
+                <div class="card">
+                    <h3><i class="fas fa-chart-bar"></i> Stock Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-globe"></i> Global Markets</h3>
+                    <div class="chart-container">
+                        <canvas id="globalChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-industry"></i> Sector Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="sectorChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-exchange-alt"></i> Currency Exchange</h3>
+                    <div class="chart-container">
+                        <canvas id="currencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Login Page -->
+        <section id="login" class="page">
+            <div class="auth-container">
+                <div class="auth-form">
+                    <h2><i class="fas fa-user-circle"></i> Login to Your Account</h2>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter your password">
+                    </div>
+                    <button class="auth-submit" id="loginSubmit">Login</button>
+                    <div class="form-footer">
+                        <p>Don't have an account? <a href="#" id="toSignupLink">Sign up</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Signup Page -->
+        <section id="signup" class="page">
+            <div class="auth-container">
+                <div class="auth-form">
+                    <h2><i class="fas fa-user-plus"></i> Create Your Account</h2>
+                    <div class="form-group">
+                        <label for="fullname">Full Name</label>
+                        <input type="text" id="fullname" placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="newUsername">Username</label>
+                        <input type="text" id="newUsername" placeholder="Choose a username">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">Password</label>
+                        <input type="password" id="newPassword" placeholder="Create a password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm your password">
+                    </div>
+                    <button class="auth-submit" id="signupSubmit">Sign Up</button>
+                    <div class="form-footer">
+                        <p>Already have an account? <a href="#" id="toLoginLink">Login</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Floating Chatbot -->
+    <div class="chatbot-container">
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <h3><i class="fas fa-robot"></i> Afinity Assistant</h3>
+                <button class="chatbot-close" id="chatbotClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot-message">
+                    Hello! I'm your Afinity Finance Assistant. How can I help you today?
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Ask me about finance...">
+                <button id="chatbotSend">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+        <button class="chatbot-toggle" id="chatbotToggle">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const settingsThemeToggle = document.getElementById('settingsThemeToggle');
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            themeToggle.innerHTML = isDarkMode 
+                ? '<i class="fas fa-sun"></i><span>Light Mode</span>' 
+                : '<i class="fas fa-moon"></i><span>Dark Mode</span>';
+            settingsThemeToggle.innerHTML = isDarkMode 
+                ? '<i class="fas fa-sun"></i><span>Light Mode</span>' 
+                : '<i class="fas fa-moon"></i><span>Dark Mode</span>';
+        }
+        
+        themeToggle.addEventListener('click', toggleTheme);
+        settingsThemeToggle.addEventListener('click', toggleTheme);
+
+        // Mobile Menu Toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Navigation
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const pages = document.querySelectorAll('.page');
+        
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetPage = link.getAttribute('data-page');
+                
+                // Update active sidebar link
+                sidebarLinks.forEach(nav => nav.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Show target page
+                pages.forEach(page => {
+                    page.classList.remove('active');
+                    if (page.id === targetPage) {
+                        page.classList.add('active');
+                    }
+                });
+                
+                // Close mobile menu if open
+                if (window.innerWidth <= 576) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+
+        // Login Functionality
+        const loginBtn = document.getElementById('loginBtn');
+        const loginPage = document.getElementById('login');
+        const loginSubmit = document.getElementById('loginSubmit');
+        const toSignupLink = document.getElementById('toSignupLink');
+        const toLoginLink = document.getElementById('toLoginLink');
+        
+        let isLoggedIn = false;
+        let users = JSON.parse(localStorage.getItem('afinityUsers')) || [];
+        
+        loginBtn.addEventListener('click', () => {
+            if (isLoggedIn) {
+                // Logout
+                isLoggedIn = false;
+                loginBtn.textContent = 'Login';
+                // Show dashboard page
+                pages.forEach(page => page.classList.remove('active'));
+                document.getElementById('dashboard').classList.add('active');
+                sidebarLinks.forEach(nav => nav.classList.remove('active'));
+                document.querySelector('[data-page="dashboard"]').classList.add('active');
+            } else {
+                // Show login page
+                pages.forEach(page => page.classList.remove('active'));
+                loginPage.classList.add('active');
+            }
+        });
+        
+        toSignupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            pages.forEach(page => page.classList.remove('active'));
+            document.getElementById('signup').classList.add('active');
+        });
+        
+        toLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            pages.forEach(page => page.classList.remove('active'));
+            loginPage.classList.add('active');
+        });
+        
+        loginSubmit.addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password) {
+                // Check if user exists
+                const user = users.find(u => u.username === username && u.password === password);
+                if (user) {
+                    isLoggedIn = true;
+                    loginBtn.textContent = 'Logout';
+                    // Show dashboard page
+                    pages.forEach(page => page.classList.remove('active'));
+                    document.getElementById('dashboard').classList.add('active');
+                    sidebarLinks.forEach(nav => nav.classList.remove('active'));
+                    document.querySelector('[data-page="dashboard"]').classList.add('active');
+                    
+                    // Reset form
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                } else {
+                    alert('Invalid username or password');
+                }
+            } else {
+                alert('Please enter both username and password');
+            }
+        });
+
+        // Signup Functionality
+        const signupSubmit = document.getElementById('signupSubmit');
+        
+        signupSubmit.addEventListener('click', () => {
+            const fullname = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (fullname && email && username && password && confirmPassword) {
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                }
+                
+                // Check if username already exists
+                if (users.find(u => u.username === username)) {
+                    alert('Username already exists');
+                    return;
+                }
+                
+                // Check if email already exists
+                if (users.find(u => u.email === email)) {
+                    alert('Email already registered');
+                    return;
+                }
+                
+                // Add new user
+                users.push({ 
+                    fullname, 
+                    email, 
+                    username, 
+                    password,
+                    joinDate: new Date().toISOString()
+                });
+                localStorage.setItem('afinityUsers', JSON.stringify(users));
+                
+                alert('Account created successfully! Please login.');
+                
+                // Redirect to login page
+                pages.forEach(page => page.classList.remove('active'));
+                loginPage.classList.add('active');
+                
+                // Reset form
+                document.getElementById('fullname').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                alert('Please fill all fields');
+            }
+        });
+
+        // Chatbot Functionality
+        const chatbotToggle = document.getElementById('chatbotToggle');
+        const chatbotWindow = document.getElementById('chatbotWindow');
+        const chatbotClose = document.getElementById('chatbotClose');
+        const chatbotSend = document.getElementById('chatbotSend');
+        const chatbotInput = document.getElementById('chatbotInput');
+        const chatbotMessages = document.getElementById('chatbotMessages');
+        
+        chatbotToggle.addEventListener('click', () => {
+            chatbotWindow.classList.toggle('active');
+        });
+        
+        chatbotClose.addEventListener('click', () => {
+            chatbotWindow.classList.remove('active');
+        });
+        
+        chatbotSend.addEventListener('click', sendMessage);
+        chatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        function sendMessage() {
+            const message = chatbotInput.value.trim();
+            if (message) {
+                // Add user message
+                addMessage(message, 'user');
+                chatbotInput.value = '';
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    const response = generateResponse(message);
+                    addMessage(response, 'bot');
+                }, 1000);
+            }
+        }
+        
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${sender}-message`);
+            messageDiv.textContent = text;
+            chatbotMessages.appendChild(messageDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+        
+        function generateResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('budget') || lowerMessage.includes('save')) {
+                return "To create a budget, track your income and expenses, then allocate funds to different categories. Try to save at least 20% of your income.";
+            } else if (lowerMessage.includes('investment') || lowerMessage.includes('invest')) {
+                return "Consider diversifying your investments across stocks, bonds, and real estate. For beginners, index funds or ETFs are good options.";
+            } else if (lowerMessage.includes('loan') || lowerMessage.includes('debt')) {
+                return "When taking a loan, compare interest rates from different lenders. Try to pay off high-interest debt first.";
+            } else if (lowerMessage.includes('stock') || lowerMessage.includes('market')) {
+                return "Stock market investing carries risks. Consider your risk tolerance and investment horizon before investing.";
+            } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                return "Hello! How can I assist you with your financial questions today?";
+            } else {
+                return "I'm here to help with financial advice. You can ask me about budgeting, investing, loans, or stock markets.";
+            }
+        }
+
+        // Initialize Charts and Calculators
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dashboard Chart
+            const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
+            new Chart(incomeExpenseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Income',
+                        data: [62000, 63000, 64000, 65000, 64000, 64200],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }, {
+                        label: 'Expenses',
+                        data: [41000, 42000, 43000, 41500, 42000, 41800],
+                        backgroundColor: '#ef4444',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Savings Chart
+            const savingsCtx = document.getElementById('savingsChart').getContext('2d');
+            new Chart(savingsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Savings',
+                        data: [18000, 19500, 21000, 20500, 22000, 22400],
+                        borderColor: '#3b82f6',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Analytics Page Charts
+            const stockCtx = document.getElementById('stockChart').getContext('2d');
+            new Chart(stockCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Tech Stocks',
+                        data: [150, 160, 155, 170, 165, 180],
+                        borderColor: '#3b82f6',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'Energy Stocks',
+                        data: [80, 85, 90, 95, 100, 105],
+                        borderColor: '#f59e0b',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const globalCtx = document.getElementById('globalChart').getContext('2d');
+            new Chart(globalCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['US', 'Europe', 'Asia', 'Emerging Markets'],
+                    datasets: [{
+                        label: 'Growth (%)',
+                        data: [12, 8, 15, 20],
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const sectorCtx = document.getElementById('sectorChart').getContext('2d');
+            new Chart(sectorCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Technology', 'Healthcare', 'Finance', 'Energy', 'Consumer'],
+                    datasets: [{
+                        data: [30, 20, 15, 15, 20],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const currencyCtx = document.getElementById('currencyChart').getContext('2d');
+            new Chart(currencyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'USD/INR',
+                        data: [82.5, 82.3, 82.7, 82.9, 82.6, 82.8],
+                        borderColor: '#3b82f6',
+                        tension: 0.4,
+                        fill: false
+                    }, {
+                        label: 'EUR/INR',
+                        data: [89.2, 89.5, 89.0, 88.8, 89.3, 89.1],
+                        borderColor: '#ef4444',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Generate Investment Ideas
+            const investmentGrid = document.getElementById('investmentGrid');
+            const investmentIdeas = [
+                { name: "NIFTY 50 Index Fund", description: "Low-cost fund tracking the NIFTY 50", return: "10-12% annually" },
+                { name: "Technology ETFs", description: "Diversified exposure to tech sector", return: "12-15% annually" },
+                { name: "Real Estate Investment Trusts", description: "Invest in real estate without owning property", return: "8-12% annually" },
+                { name: "Government Bonds", description: "Low-risk investment with fixed returns", return: "6-8% annually" },
+                { name: "Cryptocurrency", description: "High-risk digital assets with potential for high returns", return: "Highly volatile" },
+                { name: "Dividend Stocks", description: "Stocks that pay regular dividends", return: "7-9% annually + growth" },
+                { name: "Mutual Funds", description: "Professionally managed diversified portfolios", return: "10-12% annually" },
+                { name: "Gold & Precious Metals", description: "Hedge against inflation and market volatility", return: "8-10% annually" },
+                { name: "Peer-to-Peer Lending", description: "Lend money to individuals or businesses", return: "10-14% annually" },
+                { name: "Startup Investments", description: "Invest in early-stage companies", return: "High risk, potentially 25%+" },
+                { name: "International Stocks", description: "Diversify with global companies", return: "10-13% annually" },
+                { name: "Sustainable/ESG Funds", description: "Invest in environmentally and socially responsible companies", return: "9-11% annually" }
+            ];
+            
+            investmentIdeas.forEach(idea => {
+                const card = document.createElement('div');
+                card.className = 'investment-card';
+                card.innerHTML = `
+                    <h4>${idea.name}</h4>
+                    <p>${idea.description}</p>
+                    <div class="return">Expected Return: ${idea.return}</div>
+                `;
+                investmentGrid.appendChild(card);
+            });
+            
+            // Calculator Functionality
+            document.getElementById('calculateBudget').addEventListener('click', function() {
+                const salary = parseFloat(document.getElementById('salary').value) || 0;
+                const rent = parseFloat(document.getElementById('rent').value) || 0;
+                const utilities = parseFloat(document.getElementById('utilities').value) || 0;
+                const groceries = parseFloat(document.getElementById('groceries').value) || 0;
+                const entertainment = parseFloat(document.getElementById('entertainment').value) || 0;
+                
+                const totalExpenses = rent + utilities + groceries + entertainment;
+                const remaining = salary - totalExpenses;
+                
+                if (salary > 0) {
+                    const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+                    
+                    // Clear previous chart if exists
+                    if (window.budgetChartInstance) {
+                        window.budgetChartInstance.destroy();
+                    }
+                    
+                    window.budgetChartInstance = new Chart(budgetCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Rent', 'Utilities', 'Groceries', 'Entertainment', 'Remaining'],
+                            datasets: [{
+                                data: [rent, utilities, groceries, entertainment, remaining],
+                                backgroundColor: [
+                                    '#3b82f6',
+                                    '#10b981',
+                                    '#f59e0b',
+                                    '#ef4444',
+                                    '#8b5cf6'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    
+                    // Generate suggestions
+                    let suggestions = '';
+                    if (remaining < salary * 0.1) {
+                        suggestions = '<p class="warning">Your expenses are high. Consider reducing discretionary spending.</p>';
+                    } else if (remaining < salary * 0.2) {
+                        suggestions = '<p class="warning">You have some room for savings. Try to save at least 10% of your income.</p>';
+                    } else {
+                        suggestions = '<p class="success">Great! You have significant savings potential. Consider investing the surplus.</p>';
+                    }
+                    
+                    suggestions += `<p>You have ₹${remaining.toFixed(2)} remaining each month.</p>`;
+                    suggestions += `<p>That's ${(remaining/salary*100).toFixed(1)}% of your income.</p>`;
+                    
+                    document.getElementById('budgetSuggestions').innerHTML = suggestions;
+                    document.getElementById('budgetResult').classList.add('active');
+                }
+            });
+            
+            document.getElementById('resetBudget').addEventListener('click', function() {
+                document.getElementById('salary').value = '';
+                document.getElementById('rent').value = '';
+                document.getElementById('utilities').value = '';
+                document.getElementById('groceries').value = '';
+                document.getElementById('entertainment').value = '';
+                document.getElementById('budgetResult').classList.remove('active');
+                if (window.budgetChartInstance) {
+                    window.budgetChartInstance.destroy();
+                }
+            });
+            
+            document.getElementById('calculateSIP').addEventListener('click', function() {
+                const amount = parseFloat(document.getElementById('sipAmount').value) || 0;
+                const duration = parseFloat(document.getElementById('sipDuration').value) || 0;
+                const returnRate = parseFloat(document.getElementById('sipReturn').value) || 0;
+                
+                if (amount > 0 && duration > 0 && returnRate > 0) {
+                    const monthlyRate = returnRate / 100 / 12;
+                    const months = duration * 12;
+                    
+                    // Future value of SIP formula: FV = P * [((1 + r)^n - 1) / r] * (1 + r)
+                    const futureValue = amount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+                    const totalInvestment = amount * months;
+                    const wealthGained = futureValue - totalInvestment;
+                    
+                    document.getElementById('sipTotal').textContent = 
+                        `After ${duration} years, your investment of ₹${totalInvestment.toFixed(2)} will grow to ₹${futureValue.toFixed(2)}. You will earn ₹${wealthGained.toFixed(2)} in returns.`;
+                    
+                    const sipCtx = document.getElementById('sipChart').getContext('2d');
+                    
+                    // Clear previous chart if exists
+                    if (window.sipChartInstance) {
+                        window.sipChartInstance.destroy();
+                    }
+                    
+                    // Generate data for chart
+                    const years = [];
+                    const values = [];
+                    let currentValue = 0;
+                    
+                    for (let i = 1; i <= duration; i++) {
+                        years.push(`Year ${i}`);
+                        const yearMonths = i * 12;
+                        currentValue = amount * ((Math.pow(1 + monthlyRate, yearMonths) - 1) / monthlyRate) * (1 + monthlyRate);
+                        values.push(currentValue);
+                    }
+                    
+                    window.sipChartInstance = new Chart(sipCtx, {
+                        type: 'line',
+                        data: {
+                            labels: years,
+                            datasets: [{
+                                label: 'Portfolio Value',
+                                data: values,
+                                borderColor: '#3b82f6',
+                                tension: 0.4,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    
+                    document.getElementById('sipResult').classList.add('active');
+                }
+            });
+            
+            document.getElementById('resetSIP').addEventListener('click', function() {
+                document.getElementById('sipAmount').value = '';
+                document.getElementById('sipDuration').value = '';
+                document.getElementById('sipReturn').value = '';
+                document.getElementById('sipResult').classList.remove('active');
+                if (window.sipChartInstance) {
+                    window.sipChartInstance.destroy();
+                }
+            });
+            
+            document.getElementById('calculateLoan').addEventListener('click', function() {
+                const amount = parseFloat(document.getElementById('loanAmount').value) || 0;
+                const interest = parseFloat(document.getElementById('loanInterest').value) || 0;
+                const term = parseFloat(document.getElementById('loanTerm').value) || 0;
+                
+                if (amount > 0 && interest > 0 && term > 0) {
+                    const monthlyRate = interest / 100 / 12;
+                    const months = term * 12;
+                    
+                    // Monthly payment formula: P = [r*PV] / [1 - (1 + r)^-n]
+                    const monthlyPayment = (monthlyRate * amount) / (1 - Math.pow(1 + monthlyRate, -months));
+                    const totalPayment = monthlyPayment * months;
+                    const totalInterest = totalPayment - amount;
+                    
+                    document.getElementById('monthlyPayment').textContent = 
+                        `Monthly Payment: ₹${monthlyPayment.toFixed(2)}`;
+                    document.getElementById('totalInterest').textContent = 
+                        `Total Interest Paid: ₹${totalInterest.toFixed(2)}`;
+                    
+                    const loanCtx = document.getElementById('loanChart').getContext('2d');
+                    
+                    // Clear previous chart if exists
+                    if (window.loanChartInstance) {
+                        window.loanChartInstance.destroy();
+                    }
+                    
+                    window.loanChartInstance = new Chart(loanCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Principal', 'Interest'],
+                            datasets: [{
+                                data: [amount, totalInterest],
+                                backgroundColor: [
+                                    '#3b82f6',
+                                    '#ef4444'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    
+                    document.getElementById('loanResult').classList.add('active');
+                }
+            });
+            
+            document.getElementById('resetLoan').addEventListener('click', function() {
+                document.getElementById('loanAmount').value = '';
+                document.getElementById('loanInterest').value = '';
+                document.getElementById('loanTerm').value = '';
+                document.getElementById('loanResult').classList.remove('active');
+                if (window.loanChartInstance) {
+                    window.loanChartInstance.destroy();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
