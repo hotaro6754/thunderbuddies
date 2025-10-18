@@ -55,7 +55,7 @@ With Afinity, you're not just tracking money; you're mastering it. 🏆
 | . Frontend       | React.js, Tailwind CSS, Chart.js |
 | . Backend        | Node.js, Express.js              |
 | . AI Engine      | OpenAI GPT-3.5 / GPT-4           |
-| . Database       | PostgreSQL                       |
+| . Database       | SupaBase                         |
 | . Authentication | JWT + OTP Verification           |
 
 
