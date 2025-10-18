@@ -95,18 +95,18 @@
                     input.value = '';
                     appendMessage('Thinking...','bot');
 
-                    try{
-                        const res = await fetch('http://127.0.0.1:8000/openai/chat', {
-                            method:'POST',
-                            headers:{'Content-Type':'application/json'},
+                    try {
+                        const res = await fetch('/openai/chat', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({ message: text, conversation: [] })
                         });
                         const data = await res.json();
                         // replace last bot message
-                        const botEls = Array.from(messages.children).filter(n=>n.textContent==='Thinking...');
+                        const botEls = Array.from(messages.children).filter(n => n.textContent === 'Thinking...');
                         if (botEls.length) botEls[botEls.length-1].textContent = data.reply || 'No reply';
-                    }catch(err){
-                        appendMessage('Error: ' + err.message,'bot');
+                    } catch (err) {
+                        appendMessage('Error: ' + (err.message || err), 'bot');
                     }
                 });
             })();
