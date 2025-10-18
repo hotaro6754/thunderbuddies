@@ -1,0 +1,4 @@
+/* Dashboard specific styles */
+.dashboard-hero{padding:20px;background:linear-gradient(90deg,#062a49,#08385e);border-radius:8px;color:#fff}
+.cards{display:flex;gap:12px;margin-top:16px}
+.card{flex:1;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px}
