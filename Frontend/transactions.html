@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Transactions - Afinity</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <!-- include the transactions section -->
+    <!-- This page mirrors Frontend/pages/transactions.html -->
+    <section style="padding:24px;max-width:1000px;margin:0 auto;">
+      <h1>Transactions</h1>
+      <p>One-off and recurring payment tools. Includes a SIP (Systematic Investment Plan) calculator.</p>
+      <div style="margin-top:16px;">
+        <!-- embed the same form HTML -->
+        <form id="sip-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:800px;">
+          <label>
+            Monthly SIP Amount
+            <input type="number" id="sip-amount" placeholder="e.g., 5000" required />
+          </label>
+
+          <label>
+            Expected Annual Return (%)
+            <input type="number" id="sip-return" placeholder="e.g., 12" step="0.1" required />
+          </label>
+
+          <label>
+            Investment Period (years)
+            <input type="number" id="sip-years" placeholder="e.g., 10" required />
+          </label>
+
+          <label>
+            Compounding Frequency (times/year)
+            <select id="sip-frequency">
+              <option value="12">Monthly</option>
+              <option value="4">Quarterly</option>
+              <option value="1">Yearly</option>
+            </select>
+          </label>
+
+          <div style="grid-column:1/-1;display:flex;gap:12px;align-items:center;">
+            <button id="sip-calc" type="button" class="connect-btn">Calculate</button>
+            <button id="sip-reset" type="button" class="connect-btn">Reset</button>
+            <div id="sip-output" style="flex:1;padding:12px;border-radius:8px;background:#fff;border:1px solid #e6e6e6;">
+              <div><strong>Maturity Value:</strong> <span id="mv">-</span></div>
+              <div><strong>Total Invested:</strong> <span id="invested">-</span></div>
+              <div><strong>Gains:</strong> <span id="gains">-</span></div>
+              <div><strong>Annualized Return (CAGR):</strong> <span id="cagr">-</span></div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+  <script src="scripts/transactions.js"></script>
+</body>
+</html>
