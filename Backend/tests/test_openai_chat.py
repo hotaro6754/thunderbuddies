@@ -8,7 +8,11 @@ try:
     # httpx exposes ASGI transport in different places across versions
     from httpx._transports.asgi import ASGITransport
 except Exception:
-    from httpx.asgi import ASGITransport
+    try:
+        # newer httpx may expose ASGITransport on the httpx package
+        from httpx import ASGITransport
+    except Exception:
+        raise ImportError('ASGITransport not found in httpx; please install httpx>=0.24')
 
 
 @pytest.mark.asyncio
