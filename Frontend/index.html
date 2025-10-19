@@ -35,7 +35,10 @@
             <li><a href="#" class="sidebar-link" data-page="budget"><i class="fas fa-chart-pie"></i> Budget</a></li>
             <li><a href="#" class="sidebar-link" data-page="transactions"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
             <li><a href="#" class="sidebar-link" data-page="savings"><i class="fas fa-piggy-bank"></i> Savings</a></li>
+            <li><a href="#" class="sidebar-link" data-page="investments"><i class="fas fa-chart-line"></i> Investments</a></li>
             <li><a href="#" class="sidebar-link" data-page="bills"><i class="fas fa-file-invoice-dollar"></i> Bills</a></li>
+            <li><a href="#" class="sidebar-link" data-page="calculators"><i class="fas fa-calculator"></i> Calculators</a></li>
+            <li><a href="#" class="sidebar-link" data-page="analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
             <li><a href="#" class="sidebar-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
         </ul>
         
@@ -47,275 +50,451 @@
         </div>
     </div>
 
-        <!-- Floating Chatbot -->
-        <div id="chat-widget" style="position:fixed;right:20px;bottom:20px;z-index:9999;font-family:Arial,Helvetica,sans-serif;">
-            <div id="chat-toggle" style="width:110px;height:44px;border-radius:22px;background:#0ea5a4;color:#03111a;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;box-shadow:0 6px 18px rgba(0,0,0,0.2);cursor:pointer;font-weight:700;"> 
-                <i class="fas fa-robot" style="font-size:18px;"></i>
-                <span style="font-size:14px;">Chat</span>
-            </div>
-            <div id="chat-panel" style="width:380px;max-width:calc(100vw - 40px);max-height:620px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden;display:none;flex-direction:column;margin-top:10px;color:#111;">
-                <div style="padding:14px;background:#0ea5a4;color:#03111a;font-weight:700;">ThunderBuddies</div>
-                <div id="chat-messages" style="flex:1;padding:12px;overflow:auto;background:#f7fafc;"></div>
-                <form id="chat-form" style="display:flex;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:#fff;">
-                    <input id="chat-input" type="text" placeholder="Ask me about your finances..." style="flex:1;padding:10px;border-radius:10px;border:1px solid #cbd5e1;font-size:14px;" />
-                    <button style="background:#0ea5a4;border:none;color:#03111a;padding:10px 14px;border-radius:10px;font-weight:700;">Send</button>
-                </form>
-            </div>
-        </div>
-
-        <script>
-            (function(){
-                const toggle = document.getElementById('chat-toggle');
-                const panel = document.getElementById('chat-panel');
-                const form = document.getElementById('chat-form');
-                const input = document.getElementById('chat-input');
-                const messages = document.getElementById('chat-messages');
-
-                toggle.addEventListener('click', ()=>{
-                    panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
-                });
-
-                function appendMessage(text, cls='bot'){
-                    const el = document.createElement('div');
-                    el.style.marginBottom='8px';
-                    el.style.padding='8px';
-                    el.style.borderRadius='8px';
-                    el.style.background = cls==='user' ? '#0ea5a4' : '#fff';
-                    el.style.color = cls==='user' ? '#03111a' : '#111';
-                    el.textContent = text;
-                    messages.appendChild(el);
-                    messages.scrollTop = messages.scrollHeight;
-                }
-
-                form.addEventListener('submit', async (e)=>{
-                    e.preventDefault();
-                    const text = input.value.trim();
-                    if (!text) return;
-                    appendMessage(text,'user');
-                    input.value = '';
-                    appendMessage('Thinking...','bot');
-
-                    try {
-                        const res = await fetch('/openai/chat', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({ message: text, conversation: [] })
-                        });
-
-                        if (!res.ok) {
-                            // try to read JSON error body from server
-                            // use res.clone() to avoid consuming the original body stream
-                            let errBody;
-                            try {
-                                errBody = await res.clone().json();
-                            } catch (e) {
-                                // if JSON parsing fails (non-JSON body), read as text
-                                errBody = await res.text();
-                            }
-                            // attempt to extract a friendly message
-                            let friendly = '';
-                            if (errBody && typeof errBody === 'object') {
-                                // backend wraps OpenAI error under detail.body
-                                if (errBody.detail && errBody.detail.body && errBody.detail.body.error && errBody.detail.body.error.message) {
-                                    friendly = errBody.detail.body.error.message;
-                                } else if (errBody.detail && typeof errBody.detail === 'string') {
-                                    friendly = errBody.detail;
-                                } else {
-                                    friendly = JSON.stringify(errBody);
-                                }
-                            } else {
-                                friendly = String(errBody);
-                            }
-
-                            const botEls = Array.from(messages.children).filter(n => n.textContent === 'Thinking...');
-                            const target = botEls.length ? botEls[botEls.length-1] : null;
-                            const msg = 'Error: ' + (friendly || ('HTTP ' + res.status));
-                            if (target) target.textContent = msg; else appendMessage(msg,'bot');
-                            return;
-                        }
-
-                        const data = await res.json();
-                        // replace last bot message
-                        const botEls = Array.from(messages.children).filter(n => n.textContent === 'Thinking...');
-                        if (botEls.length) botEls[botEls.length-1].textContent = data.reply || 'No reply';
-                    } catch (err) {
-                        appendMessage('Error: ' + (err.message || err), 'bot');
-                    }
-                });
-            })();
-        </script>
     <!-- Main Content -->
     <div class="main-content">
         <!-- Dashboard Page -->
         <section id="dashboard" class="page active">
-            <div class="dashboard-header">
-                <h1>Dashboard</h1>
-                <div class="header-actions">
-                    
-                    <a href="account-aggregator.html" class="aggregate-btn" target="_blank" rel="noopener noreferrer" style="margin-left:8px;padding:8px 12px;border-radius:8px;background:#0ea5a4;color:#03111a;text-decoration:none;font-weight:600;">Aggregate your account</a>
-                </div>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Monthly Income</h3>
-                    <div class="amount">₹64,200</div>
-                    <div class="change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>2.1% from last month</span>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <h3>Monthly Expenses</h3>
-                    <div class="amount">₹41,800</div>
-                    <div class="change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>2.1% from last month</span>
-                    </div>
-                </div>
-                
-                <div class="stat-card">
-                    <h3>Monthly Savings</h3>
-                    <div class="amount">₹22,400</div>
-                    <div class="change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>12.5% from last month</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="dashboard-grid">
-                <div class="card">
-                    <h3>
-                        Income vs Expenses
-                        <div class="time-filter">
-                            <button class="time-btn active">6M</button>
-                            <button class="time-btn">1Y</button>
-                            <button class="time-btn">Custom</button>
-                        </div>
-                    </h3>
-                    <div class="chart-container">
-                        <canvas id="incomeExpenseChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="card">
-    <h3>
-        Income vs Expenses
-        <div class="time-filter">
-            <button class="time-btn active">6M</button>
-            <button class="time-btn">1Y</button>
-            <button class="time-btn">Custom</button>
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <div class="header-actions">
+            <a href="account-aggregator.html" class="aggregate-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-plus-circle"></i> Aggregate Account
+            </a>
         </div>
-    </h3>
+    </div>
     
-    <div class="income-expense-chart">
-        <div class="chart-container">
-            <canvas id="incomeExpenseChart"></canvas>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <h3>Monthly Income</h3>
+            <div class="amount">₹64,200</div>
+            <div class="change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>2.1% from last month</span>
+            </div>
         </div>
         
-        <div class="chart-legend">
-            <div class="legend-item">
-                <span class="legend-color legend-income"></span>
-                <span>Income</span>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-shopping-cart"></i>
             </div>
-            <div class="legend-item">
-                <span class="legend-color legend-expense"></span>
-                <span>Expenses</span>
+            <h3>Monthly Expenses</h3>
+            <div class="amount">₹41,800</div>
+            <div class="change negative">
+                <i class="fas fa-arrow-up"></i>
+                <span>2.1% from last month</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-piggy-bank"></i>
+            </div>
+            <h3>Monthly Savings</h3>
+            <div class="amount">₹22,400</div>
+            <div class="change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>12.5% from last month</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Net Worth</h3>
+            <div class="amount">₹8,45,670</div>
+            <div class="change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>5.2% from last month</span>
             </div>
         </div>
     </div>
-</div>
-                    <div class="goals-container">
-                        <div class="goal-item">
-                            <div class="goal-header">
-                                <h4>Emergency Fund</h4>
-                                <span>₹70,000/₹1,00,000</span>
-                            </div>
-                            <div class="goal-progress">
-                                <div class="goal-progress-bar" style="width: 70%"></div>
-                            </div>
-                            <div class="goal-details">
-                                <span>70% Completed</span>
-                                <span>₹30,000 left</span>
-                            </div>
-                        </div>
-                        
-                        <div class="goal-item">
-                            <div class="goal-header">
-                                <h4>House Down Payment</h4>
-                                <span>₹2,25,000/₹5,00,000</span>
-                            </div>
-                            <div class="goal-progress">
-                                <div class="goal-progress-bar" style="width: 45%"></div>
-                            </div>
-                            <div class="goal-details">
-                                <span>45% Completed</span>
-                                <span>₹2,75,000 left</span>
-                            </div>
-                        </div>
-                        
-                        <div class="goal-item">
-                            <div class="goal-header">
-                                <h4>Retirement</h4>
-                                <span>₹6,00,000/₹10,00,000</span>
-                            </div>
-                            <div class="goal-progress">
-                                <div class="goal-progress-bar" style="width: 60%"></div>
-                            </div>
-                            <div class="goal-details">
-                                <span>60% Completed</span>
-                                <span>₹4,00,000 left</span>
-                            </div>
-                        </div>
+    
+    <div class="dashboard-grid">
+        <!-- Income vs Expenses Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Income vs Expenses</h3>
+                <div class="time-filter">
+                    <button class="time-btn active" data-period="6m">6M</button>
+                    <button class="time-btn" data-period="1y">1Y</button>
+                    <button class="time-btn" id="customChartBtn">Custom</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="incomeExpenseChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Expense Breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Expense Breakdown</h3>
+                <div class="time-filter">
+                    <button class="time-btn active" data-period="current">This Month</button>
+                    <button class="time-btn" data-period="last">Last Month</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="expensePieChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Savings Goals -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Savings Goals</h3>
+                <button class="add-goal-btn" id="addGoalBtn">+ Add Goal</button>
+            </div>
+            <div class="goals-container">
+                <div class="goal-item" data-goal="emergency">
+                    <div class="goal-header">
+                        <h4>Emergency Fund</h4>
+                        <span>₹70,000/₹1,00,000</span>
+                    </div>
+                    <div class="goal-progress">
+                        <div class="goal-progress-bar" style="width: 70%"></div>
+                    </div>
+                    <div class="goal-details">
+                        <span>70% Completed</span>
+                        <span>₹30,000 left</span>
+                    </div>
+                </div>
+                
+                <div class="goal-item" data-goal="house">
+                    <div class="goal-header">
+                        <h4>House Down Payment</h4>
+                        <span>₹2,25,000/₹5,00,000</span>
+                    </div>
+                    <div class="goal-progress">
+                        <div class="goal-progress-bar" style="width: 45%"></div>
+                    </div>
+                    <div class="goal-details">
+                        <span>45% Completed</span>
+                        <span>₹2,75,000 left</span>
+                    </div>
+                </div>
+                
+                <div class="goal-item" data-goal="retirement">
+                    <div class="goal-header">
+                        <h4>Retirement</h4>
+                        <span>₹6,00,000/₹10,00,000</span>
+                    </div>
+                    <div class="goal-progress">
+                        <div class="goal-progress-bar" style="width: 60%"></div>
+                    </div>
+                    <div class="goal-details">
+                        <span>60% Completed</span>
+                        <span>₹4,00,000 left</span>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+        
+        <!-- Recent Transactions -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Transactions</h3>
+                <a href="#" class="view-all" id="viewAllTransactions">View All</a>
+            </div>
+            <div class="transactions-list">
+                <div class="transaction-item" data-category="shopping">
+                    <div class="transaction-info">
+                        <div class="transaction-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <h4>Amazon Purchase</h4>
+                            <p>15 Oct 2023 • Shopping</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount expense">-₹2,499</div>
+                </div>
+                
+                <div class="transaction-item" data-category="income">
+                    <div class="transaction-info">
+                        <div class="transaction-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <h4>Salary Credit</h4>
+                            <p>10 Oct 2023 • Income</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount income">+₹64,200</div>
+                </div>
+                
+                <div class="transaction-item" data-category="dining">
+                    <div class="transaction-info">
+                        <div class="transaction-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <h4>Restaurant Bill</h4>
+                            <p>8 Oct 2023 • Dining</p>
+                        </div>
+                    </div>
+                    <div class="transaction-amount expense">-₹1,850</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Investment Performance -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Investment Performance</h3>
+                <div class="time-filter">
+                    <button class="time-btn active" data-period="ytd">YTD</button>
+                    <button class="time-btn" data-period="1y">1Y</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="investmentChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Upcoming Bills -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Upcoming Bills</h3>
+                <a href="#" class="view-all" id="viewAllBills">View All</a>
+            </div>
+            <div class="bills-list">
+                <div class="bill-item" data-bill="electricity">
+                    <div class="bill-info">
+                        <h4>Electricity Bill</h4>
+                        <p>Due in 5 days</p>
+                    </div>
+                    <div class="bill-amount">₹2,450</div>
+                </div>
+                
+                <div class="bill-item" data-bill="credit-card">
+                    <div class="bill-info">
+                        <h4>Credit Card Bill</h4>
+                        <p>Due in 12 days</p>
+                    </div>
+                    <div class="bill-amount">₹12,450</div>
+                </div>
+                
+                <div class="bill-item" data-bill="mobile">
+                    <div class="bill-info">
+                        <h4>Mobile Recharge</h4>
+                        <p>Due in 3 days</p>
+                    </div>
+                    <div class="bill-amount">₹299</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Custom Chart Modal -->
+<div id="customChartModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Create Custom Chart</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="chartType">Chart Type</label>
+                <select id="chartType">
+                    <option value="bar">Bar Chart</option>
+                    <option value="line">Line Chart</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="startDate">Start Date</label>
+                <input type="month" id="startDate" value="2023-01">
+            </div>
+            <div class="form-group">
+                <label for="endDate">End Date</label>
+                <input type="month" id="endDate" value="2023-06">
+            </div>
+            <div class="form-group">
+                <label for="dataType">Data Type</label>
+                <select id="dataType">
+                    <option value="income">Income</option>
+                    <option value="expenses">Expenses</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" id="cancelCustomChart">Cancel</button>
+            <button class="primary-btn" id="generateCustomChart">Generate Chart</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Goal Modal -->
+<div id="addGoalModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Savings Goal</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="goalName">Goal Name</label>
+                <input type="text" id="goalName" placeholder="Enter goal name">
+            </div>
+            <div class="form-group">
+                <label for="targetAmount">Target Amount (₹)</label>
+                <input type="number" id="targetAmount" placeholder="Enter target amount">
+            </div>
+            <div class="form-group">
+                <label for="currentAmount">Current Amount (₹)</label>
+                <input type="number" id="currentAmount" placeholder="Enter current amount">
+            </div>
+            <div class="form-group">
+                <label for="targetDate">Target Date</label>
+                <input type="date" id="targetDate">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-btn" id="cancelAddGoal">Cancel</button>
+            <button class="primary-btn" id="saveGoal">Save Goal</button>
+        </div>
+    </div>
+</div>
 
         <!-- Accounts Page -->
         <section id="accounts" class="page">
             <div class="dashboard-header">
                 <h1>Accounts</h1>
+                <button class="add-account-btn">+ Add Account</button>
             </div>
-            <p>Manage your bank accounts, credit cards, and investments in one place.</p>
+            <p class="page-description">Manage your bank accounts, credit cards, and investments in one place.</p>
             
             <div class="accounts-grid">
                 <div class="account-card">
                     <div class="account-header">
-                        <h3>Savings Account</h3>
-                        <span class="account-type">HDFC Bank</span>
+                        <div class="account-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="account-info">
+                            <h3>Savings Account</h3>
+                            <span class="account-type">HDFC Bank</span>
+                        </div>
                     </div>
                     <div class="account-balance">₹1,85,420</div>
                     <div class="account-number">XXXX XXXX 4567</div>
+                    <div class="account-actions">
+                        <button class="action-btn"><i class="fas fa-exchange-alt"></i> Transfer</button>
+                        <button class="action-btn"><i class="fas fa-chart-line"></i> Details</button>
+                    </div>
                 </div>
                 
                 <div class="account-card">
                     <div class="account-header">
-                        <h3>Current Account</h3>
-                        <span class="account-type">ICICI Bank</span>
+                        <div class="account-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="account-info">
+                            <h3>Current Account</h3>
+                            <span class="account-type">ICICI Bank</span>
+                        </div>
                     </div>
                     <div class="account-balance">₹72,150</div>
                     <div class="account-number">XXXX XXXX 7890</div>
-                </div>
-                
-                <div class="account-card">
-                    <div class="account-header">
-                        <h3>Credit Card</h3>
-                        <span class="account-type">SBI Card</span>
+                    <div class="account-actions">
+                        <button class="action-btn"><i class="fas fa-exchange-alt"></i> Transfer</button>
+                        <button class="action-btn"><i class="fas fa-chart-line"></i> Details</button>
                     </div>
-                    <div class="account-balance">-₹12,450</div>
-                    <div class="account-number">XXXX XXXX 2345</div>
                 </div>
                 
                 <div class="account-card">
                     <div class="account-header">
-                        <h3>Investment Portfolio</h3>
-                        <span class="account-type">Demat Account</span>
+                        <div class="account-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="account-info">
+                            <h3>Credit Card</h3>
+                            <span class="account-type">SBI Card</span>
+                        </div>
+                    </div>
+                    <div class="account-balance negative">-₹12,450</div>
+                    <div class="account-number">XXXX XXXX 2345</div>
+                    <div class="account-due">Due: 1 Nov 2023</div>
+                    <div class="account-actions">
+                        <button class="action-btn"><i class="fas fa-money-bill-wave"></i> Pay</button>
+                        <button class="action-btn"><i class="fas fa-chart-line"></i> Details</button>
+                    </div>
+                </div>
+                
+                <div class="account-card">
+                    <div class="account-header">
+                        <div class="account-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="account-info">
+                            <h3>Investment Portfolio</h3>
+                            <span class="account-type">Demat Account</span>
+                        </div>
                     </div>
                     <div class="account-balance">₹5,67,800</div>
                     <div class="account-number">ZERODHA</div>
+                    <div class="account-change positive">+12.5%</div>
+                    <div class="account-actions">
+                        <button class="action-btn"><i class="fas fa-plus"></i> Invest</button>
+                        <button class="action-btn"><i class="fas fa-chart-line"></i> Details</button>
+                    </div>
+                </div>
+                
+                <div class="account-card">
+                    <div class="account-header">
+                        <div class="account-icon">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <div class="account-info">
+                            <h3>Fixed Deposit</h3>
+                            <span class="account-type">Axis Bank</span>
+                        </div>
+                    </div>
+                    <div class="account-balance">₹2,50,000</div>
+                    <div class="account-number">FD12345678</div>
+                    <div class="account-maturity">Matures: 15 Dec 2023</div>
+                    <div class="account-actions">
+                        <button class="action-btn"><i class="fas fa-chart-line"></i> Details</button>
+                    </div>
+                </div>
+                
+                <div class="account-card">
+                    <div class="account-header">
+                        <div class="account-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="account-info">
+                            <h3>Home Loan</h3>
+                            <span class="account-type">HDFC Bank</span>
+                        </div>
+                    </div>
+                    <div class="account-balance negative">-₹28,50,000</div>
+                    <div class="account-number">HL98765432</div>
+                    <div class="account-emi">EMI: ₹32,500</div>
+                    <div class="account-actions">
+                        <button class="action-btn"><i class="fas fa-money-bill-wave"></i> Pay EMI</button>
+                        <button class="action-btn"><i class="fas fa-chart-line"></i> Details</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="account-summary">
+                <div class="summary-card">
+                    <h3>Total Assets</h3>
+                    <div class="amount">₹10,75,370</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Total Liabilities</h3>
+                    <div class="amount">₹28,62,450</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Net Worth</h3>
+                    <div class="amount">₹8,45,670</div>
                 </div>
             </div>
         </section>
@@ -324,19 +503,58 @@
         <section id="budget" class="page">
             <div class="dashboard-header">
                 <h1>Budget</h1>
+                <button class="add-budget-btn">+ Create Budget</button>
             </div>
-            <p>Track your spending and manage your budget effectively.</p>
+            <p class="page-description">Track your spending and manage your budget effectively.</p>
+            
+            <div class="budget-overview">
+                <div class="budget-progress">
+                    <div class="progress-circle">
+                        <div class="circle-bg"></div>
+                        <div class="circle-progress" style="--progress: 75%"></div>
+                        <div class="circle-text">
+                            <span class="percentage">75%</span>
+                            <span class="label">Used</span>
+                        </div>
+                    </div>
+                    <div class="budget-details">
+                        <h3>Monthly Budget</h3>
+                        <div class="amount">₹41,800 / ₹55,000</div>
+                        <div class="remaining">₹13,200 remaining</div>
+                    </div>
+                </div>
+                
+                <div class="budget-stats">
+                    <div class="stat">
+                        <span class="label">Daily Average</span>
+                        <span class="value">₹1,348</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Days Left</span>
+                        <span class="value">10</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Projected</span>
+                        <span class="value">₹47,240</span>
+                    </div>
+                </div>
+            </div>
             
             <div class="budget-grid">
                 <div class="card">
-                    <h3>Budget Overview</h3>
+                    <h3>Budget Categories</h3>
                     <div class="budget-categories">
                         <div class="budget-category">
                             <div class="category-info">
-                                <h4>Housing</h4>
-                                <p>₹15,000 / ₹20,000</p>
-                                <div class="category-progress">
-                                    <div class="category-progress-bar" style="width: 75%"></div>
+                                <div class="category-icon">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <div>
+                                    <h4>Housing</h4>
+                                    <p>₹15,000 / ₹20,000</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 75%"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="category-amount">75%</div>
@@ -344,10 +562,15 @@
                         
                         <div class="budget-category">
                             <div class="category-info">
-                                <h4>Food & Dining</h4>
-                                <p>₹8,000 / ₹10,000</p>
-                                <div class="category-progress">
-                                    <div class="category-progress-bar" style="width: 80%"></div>
+                                <div class="category-icon">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                                <div>
+                                    <h4>Food & Dining</h4>
+                                    <p>₹8,000 / ₹10,000</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 80%"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="category-amount">80%</div>
@@ -355,10 +578,15 @@
                         
                         <div class="budget-category">
                             <div class="category-info">
-                                <h4>Transportation</h4>
-                                <p>₹4,500 / ₹6,000</p>
-                                <div class="category-progress">
-                                    <div class="category-progress-bar" style="width: 75%"></div>
+                                <div class="category-icon">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <div>
+                                    <h4>Transportation</h4>
+                                    <p>₹4,500 / ₹6,000</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 75%"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="category-amount">75%</div>
@@ -366,10 +594,15 @@
                         
                         <div class="budget-category">
                             <div class="category-info">
-                                <h4>Entertainment</h4>
-                                <p>₹3,000 / ₹5,000</p>
-                                <div class="category-progress">
-                                    <div class="category-progress-bar" style="width: 60%"></div>
+                                <div class="category-icon">
+                                    <i class="fas fa-film"></i>
+                                </div>
+                                <div>
+                                    <h4>Entertainment</h4>
+                                    <p>₹3,000 / ₹5,000</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 60%"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="category-amount">60%</div>
@@ -377,14 +610,81 @@
                         
                         <div class="budget-category">
                             <div class="category-info">
-                                <h4>Utilities</h4>
-                                <p>₹2,500 / ₹3,500</p>
-                                <div class="category-progress">
-                                    <div class="category-progress-bar" style="width: 71%"></div>
+                                <div class="category-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div>
+                                    <h4>Utilities</h4>
+                                    <p>₹2,500 / ₹3,500</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 71%"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="category-amount">71%</div>
                         </div>
+                        
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <div class="category-icon">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <div>
+                                    <h4>Shopping</h4>
+                                    <p>₹4,500 / ₹7,000</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 64%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="category-amount">64%</div>
+                        </div>
+                        
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <div class="category-icon">
+                                    <i class="fas fa-heartbeat"></i>
+                                </div>
+                                <div>
+                                    <h4>Health & Fitness</h4>
+                                    <p>₹1,800 / ₹2,500</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 72%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="category-amount">72%</div>
+                        </div>
+                        
+                        <div class="budget-category">
+                            <div class="category-info">
+                                <div class="category-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div>
+                                    <h4>Education</h4>
+                                    <p>₹2,500 / ₹4,000</p>
+                                    <div class="category-progress">
+                                        <div class="category-progress-bar" style="width: 62%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="category-amount">62%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Budget vs Actual</h3>
+                    <div class="chart-container">
+                        <canvas id="budgetVsActualChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Spending Trends</h3>
+                    <div class="chart-container">
+                        <canvas id="spendingTrendsChart"></canvas>
                     </div>
                 </div>
                 
@@ -411,8 +711,8 @@
                             <label for="entertainment">Entertainment (₹)</label>
                             <input type="number" id="entertainment" placeholder="Enter entertainment cost">
                         </div>
-                        <button id="calculateBudget">Calculate Budget</button>
-                        <button class="reset" id="resetBudget">Reset</button>
+                        <button id="calculateBudget" class="primary-btn">Calculate Budget</button>
+                        <button id="resetBudget" class="secondary-btn">Reset</button>
                         <div class="result" id="budgetResult">
                             <h4>Your Budget Summary</h4>
                             <div class="chart-container">
@@ -429,40 +729,52 @@
         <section id="transactions" class="page">
             <div class="dashboard-header">
                 <h1>Transactions</h1>
+                <button class="add-transaction-btn">+ Add Transaction</button>
             </div>
-            <p>View and manage your transaction history.</p>
+            <p class="page-description">View and manage your transaction history.</p>
             
             <div class="transactions-container">
                 <div class="transaction-filters">
-                    <button class="filter-btn active">All</button>
-                    <button class="filter-btn">Income</button>
-                    <button class="filter-btn">Expenses</button>
-                    <button class="filter-btn">This Month</button>
-                    <button class="filter-btn">Last Month</button>
+                    <div class="filter-group">
+                        <button class="filter-btn active">All</button>
+                        <button class="filter-btn">Income</button>
+                        <button class="filter-btn">Expenses</button>
+                    </div>
+                    <div class="filter-group">
+                        <button class="filter-btn active">This Month</button>
+                        <button class="filter-btn">Last Month</button>
+                        <button class="filter-btn">Custom</button>
+                    </div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search transactions...">
+                    </div>
+                </div>
+                
+                <div class="transaction-summary">
+                    <div class="summary-item">
+                        <span class="label">Total Income</span>
+                        <span class="value income">₹64,200</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Total Expenses</span>
+                        <span class="value expense">₹41,800</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Net Flow</span>
+                        <span class="value positive">₹22,400</span>
+                    </div>
                 </div>
                 
                 <div class="transaction-list">
                     <div class="transaction-item">
                         <div class="transaction-info">
-                            <div class="transaction-icon">
-                                <i class="fas fa-shopping-cart"></i>
-                            </div>
-                            <div class="transaction-details">
-                                <h4>Amazon Purchase</h4>
-                                <p>15 Oct 2023 • Shopping</p>
-                            </div>
-                        </div>
-                        <div class="transaction-amount expense">-₹2,499</div>
-                    </div>
-                    
-                    <div class="transaction-item">
-                        <div class="transaction-info">
-                            <div class="transaction-icon">
+                            <div class="transaction-icon income">
                                 <i class="fas fa-money-bill-wave"></i>
                             </div>
                             <div class="transaction-details">
                                 <h4>Salary Credit</h4>
-                                <p>10 Oct 2023 • Income</p>
+                                <p>10 Oct 2023 • HDFC Bank • Income</p>
                             </div>
                         </div>
                         <div class="transaction-amount income">+₹64,200</div>
@@ -470,25 +782,38 @@
                     
                     <div class="transaction-item">
                         <div class="transaction-info">
-                            <div class="transaction-icon">
-                                <i class="fas fa-utensils"></i>
+                            <div class="transaction-icon expense">
+                                <i class="fas fa-home"></i>
                             </div>
                             <div class="transaction-details">
-                                <h4>Restaurant Bill</h4>
-                                <p>8 Oct 2023 • Dining</p>
+                                <h4>Rent Payment</h4>
+                                <p>1 Oct 2023 • Housing • Expense</p>
                             </div>
                         </div>
-                        <div class="transaction-amount expense">-₹1,850</div>
+                        <div class="transaction-amount expense">-₹15,000</div>
                     </div>
                     
                     <div class="transaction-item">
                         <div class="transaction-info">
-                            <div class="transaction-icon">
+                            <div class="transaction-icon expense">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Amazon Purchase</h4>
+                                <p>15 Oct 2023 • Shopping • Expense</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount expense">-₹2,499</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon expense">
                                 <i class="fas fa-gas-pump"></i>
                             </div>
                             <div class="transaction-details">
                                 <h4>Fuel Charge</h4>
-                                <p>5 Oct 2023 • Transportation</p>
+                                <p>5 Oct 2023 • Transportation • Expense</p>
                             </div>
                         </div>
                         <div class="transaction-amount expense">-₹3,200</div>
@@ -496,15 +821,54 @@
                     
                     <div class="transaction-item">
                         <div class="transaction-info">
-                            <div class="transaction-icon">
-                                <i class="fas fa-home"></i>
+                            <div class="transaction-icon expense">
+                                <i class="fas fa-utensils"></i>
                             </div>
                             <div class="transaction-details">
-                                <h4>Rent Payment</h4>
-                                <p>1 Oct 2023 • Housing</p>
+                                <h4>Restaurant Bill</h4>
+                                <p>8 Oct 2023 • Dining • Expense</p>
                             </div>
                         </div>
-                        <div class="transaction-amount expense">-₹15,000</div>
+                        <div class="transaction-amount expense">-₹1,850</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon expense">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Electricity Bill</h4>
+                                <p>3 Oct 2023 • Utilities • Expense</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount expense">-₹2,450</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon expense">
+                                <i class="fas fa-film"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Netflix Subscription</h4>
+                                <p>2 Oct 2023 • Entertainment • Expense</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount expense">-₹799</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-icon income">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>Freelance Payment</h4>
+                                <p>28 Sep 2023 • Additional Income • Income</p>
+                            </div>
+                        </div>
+                        <div class="transaction-amount income">+₹8,500</div>
                     </div>
                 </div>
             </div>
@@ -514,13 +878,49 @@
         <section id="savings" class="page">
             <div class="dashboard-header">
                 <h1>Savings</h1>
+                <button class="add-savings-btn">+ Add Savings Goal</button>
             </div>
-            <p>Track your savings goals and progress.</p>
+            <p class="page-description">Track your savings goals and progress.</p>
+            
+            <div class="savings-overview">
+                <div class="savings-card">
+                    <div class="savings-icon">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="savings-details">
+                        <h3>Total Savings</h3>
+                        <div class="amount">₹2,45,000</div>
+                        <div class="change positive">+12.5% from last month</div>
+                    </div>
+                </div>
+                
+                <div class="savings-card">
+                    <div class="savings-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="savings-details">
+                        <h3>Monthly Savings</h3>
+                        <div class="amount">₹22,400</div>
+                        <div class="change positive">+5.2% from last month</div>
+                    </div>
+                </div>
+                
+                <div class="savings-card">
+                    <div class="savings-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="savings-details">
+                        <h3>Savings Rate</h3>
+                        <div class="amount">34.9%</div>
+                        <div class="change positive">+2.1% from last month</div>
+                    </div>
+                </div>
+            </div>
             
             <div class="savings-grid">
                 <div class="card">
                     <h3>Savings Goals</h3>
-                    <div class="savings-goal">
+                    <div class="savings-goals">
                         <div class="goal-item">
                             <div class="goal-header">
                                 <h4>Emergency Fund</h4>
@@ -532,6 +932,9 @@
                             <div class="goal-details">
                                 <span>70% Completed</span>
                                 <span>₹30,000 left</span>
+                            </div>
+                            <div class="goal-actions">
+                                <button class="action-btn"><i class="fas fa-plus"></i> Add Funds</button>
                             </div>
                         </div>
                         
@@ -547,6 +950,9 @@
                                 <span>50% Completed</span>
                                 <span>₹25,000 left</span>
                             </div>
+                            <div class="goal-actions">
+                                <button class="action-btn"><i class="fas fa-plus"></i> Add Funds</button>
+                            </div>
                         </div>
                         
                         <div class="goal-item">
@@ -561,36 +967,48 @@
                                 <span>30% Completed</span>
                                 <span>₹3,50,000 left</span>
                             </div>
+                            <div class="goal-actions">
+                                <button class="action-btn"><i class="fas fa-plus"></i> Add Funds</button>
+                            </div>
+                        </div>
+                        
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4>Home Renovation</h4>
+                                <span>₹75,000/₹2,00,000</span>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-bar" style="width: 37.5%"></div>
+                            </div>
+                            <div class="goal-details">
+                                <span>37.5% Completed</span>
+                                <span>₹1,25,000 left</span>
+                            </div>
+                            <div class="goal-actions">
+                                <button class="action-btn"><i class="fas fa-plus"></i> Add Funds</button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="card">
-                    <h3>Savings Summary</h3>
-                    <div class="savings-summary">
-                        <div class="summary-card">
-                            <h4>Monthly Savings</h4>
-                            <div class="amount">₹22,400</div>
-                        </div>
-                        
-                        <div class="summary-card">
-                            <h4>Total Savings</h4>
-                            <div class="amount">₹2,45,000</div>
-                        </div>
-                        
-                        <div class="summary-card">
-                            <h4>Savings Rate</h4>
-                            <div class="amount">34.9%</div>
-                        </div>
-                        
-                        <div class="summary-card">
-                            <h4>YTD Growth</h4>
-                            <div class="amount">12.5%</div>
-                        </div>
-                    </div>
-                    
+                    <h3>Savings Progress</h3>
                     <div class="chart-container">
                         <canvas id="savingsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Savings Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="savingsDistributionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Monthly Savings Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="savingsTrendChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -600,11 +1018,162 @@
         <section id="investments" class="page">
             <div class="dashboard-header">
                 <h1>Investments</h1>
+                <button class="add-investment-btn">+ Add Investment</button>
             </div>
-            <p>Manage your investment portfolio and explore new opportunities.</p>
+            <p class="page-description">Manage your investment portfolio and explore new opportunities.</p>
             
-            <div class="investment-grid" id="investmentGrid">
-                <!-- Investment cards will be generated by JavaScript -->
+            <div class="investment-overview">
+                <div class="investment-card">
+                    <div class="investment-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="investment-details">
+                        <h3>Portfolio Value</h3>
+                        <div class="amount">₹5,67,800</div>
+                        <div class="change positive">+12.5% YTD</div>
+                    </div>
+                </div>
+                
+                <div class="investment-card">
+                    <div class="investment-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="investment-details">
+                        <h3>Total Invested</h3>
+                        <div class="amount">₹4,50,000</div>
+                        <div class="change neutral">+0% today</div>
+                    </div>
+                </div>
+                
+                <div class="investment-card">
+                    <div class="investment-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="investment-details">
+                        <h3>Total Returns</h3>
+                        <div class="amount">₹1,17,800</div>
+                        <div class="change positive">+26.2% overall</div>
+                    </div>
+                </div>
+                
+                <div class="investment-card">
+                    <div class="investment-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="investment-details">
+                        <h3>Annualized Return</h3>
+                        <div class="amount">14.8%</div>
+                        <div class="change positive">+2.3% from last year</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="investment-grid">
+                <div class="card">
+                    <h3>Portfolio Allocation</h3>
+                    <div class="chart-container">
+                        <canvas id="portfolioAllocationChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Investment Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="investmentPerformanceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Your Investments</h3>
+                    <div class="investments-list">
+                        <div class="investment-item">
+                            <div class="investment-info">
+                                <div class="investment-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="investment-details">
+                                    <h4>NIFTY 50 Index Fund</h4>
+                                    <p>Equity • Large Cap</p>
+                                </div>
+                            </div>
+                            <div class="investment-value">
+                                <div class="amount">₹1,85,000</div>
+                                <div class="change positive">+15.2%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="investment-item">
+                            <div class="investment-info">
+                                <div class="investment-icon">
+                                    <i class="fas fa-microchip"></i>
+                                </div>
+                                <div class="investment-details">
+                                    <h4>Technology ETF</h4>
+                                    <p>Equity • Sectoral</p>
+                                </div>
+                            </div>
+                            <div class="investment-value">
+                                <div class="amount">₹1,20,000</div>
+                                <div class="change positive">+22.5%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="investment-item">
+                            <div class="investment-info">
+                                <div class="investment-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="investment-details">
+                                    <h4>Government Bonds</h4>
+                                    <p>Debt • Sovereign</p>
+                                </div>
+                            </div>
+                            <div class="investment-value">
+                                <div class="amount">₹1,00,000</div>
+                                <div class="change positive">+7.2%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="investment-item">
+                            <div class="investment-info">
+                                <div class="investment-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="investment-details">
+                                    <h4>Real Estate Fund</h4>
+                                    <p>Alternative • REIT</p>
+                                </div>
+                            </div>
+                            <div class="investment-value">
+                                <div class="amount">₹85,000</div>
+                                <div class="change positive">+9.8%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="investment-item">
+                            <div class="investment-info">
+                                <div class="investment-icon">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <div class="investment-details">
+                                    <h4>International Fund</h4>
+                                    <p>Equity • Global</p>
+                                </div>
+                            </div>
+                            <div class="investment-value">
+                                <div class="amount">₹77,800</div>
+                                <div class="change positive">+12.3%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Investment Ideas</h3>
+                    <div class="investment-ideas" id="investmentGrid">
+                        <!-- Investment ideas will be generated by JavaScript -->
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -612,110 +1181,133 @@
         <section id="bills" class="page">
             <div class="dashboard-header">
                 <h1>Bills</h1>
+                <button class="add-bill-btn">+ Add Bill</button>
             </div>
-            <p>Track and manage your upcoming bills and payments.</p>
+            <p class="page-description">Track and manage your upcoming bills and payments.</p>
+            
+            <div class="bills-overview">
+                <div class="bill-summary">
+                    <div class="summary-item">
+                        <span class="label">Total Due</span>
+                        <span class="value">₹15,199</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Upcoming</span>
+                        <span class="value">5 bills</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Overdue</span>
+                        <span class="value">0 bills</span>
+                    </div>
+                </div>
+            </div>
             
             <div class="bills-grid">
-                <div class="bill-card">
-                    <div class="bill-header">
-                        <h3>Electricity Bill</h3>
-                        <span class="bill-status status-pending">Due in 5 days</span>
-                    </div>
-                    <div class="bill-amount">₹2,450</div>
-                    <div class="bill-due">Due Date: 25 Oct 2023</div>
-                </div>
-                
-                <div class="bill-card">
-                    <div class="bill-header">
-                        <h3>Internet Bill</h3>
-                        <span class="bill-status status-paid">Paid</span>
-                    </div>
-                    <div class="bill-amount">₹899</div>
-                    <div class="bill-due">Paid on: 10 Oct 2023</div>
-                </div>
-                
-                <div class="bill-card">
-                    <div class="bill-header">
-                        <h3>Credit Card Bill</h3>
-                        <span class="bill-status status-pending">Due in 12 days</span>
-                    </div>
-                    <div class="bill-amount">₹12,450</div>
-                    <div class="bill-due">Due Date: 1 Nov 2023</div>
-                </div>
-                
-                <div class="bill-card">
-                    <div class="bill-header">
-                        <h3>Mobile Recharge</h3>
-                        <span class="bill-status status-pending">Due in 3 days</span>
-                    </div>
-                    <div class="bill-amount">₹299</div>
-                    <div class="bill-due">Due Date: 23 Oct 2023</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Settings Page -->
-        <section id="settings" class="page">
-            <div class="dashboard-header">
-                <h1>Settings</h1>
-            </div>
-            <p>Customize your Afinity experience.</p>
-            
-            <div class="settings-container">
-                <div class="settings-section">
-                    <h3>Account Settings</h3>
-                    <div class="settings-option">
-                        <div>
-                            <h4>Personal Information</h4>
-                            <p>Update your name, email, and contact details</p>
+                <div class="card">
+                    <h3>Upcoming Bills</h3>
+                    <div class="bills-list">
+                        <div class="bill-item">
+                            <div class="bill-info">
+                                <div class="bill-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="bill-details">
+                                    <h4>Electricity Bill</h4>
+                                    <p>Due in 5 days</p>
+                                </div>
+                            </div>
+                            <div class="bill-amount">₹2,450</div>
+                            <button class="pay-btn">Pay Now</button>
                         </div>
-                        <i class="fas fa-chevron-right"></i>
-                    </div>
-                    
-                    <div class="settings-option">
-                        <div>
-                            <h4>Security</h4>
-                            <p>Change password and enable two-factor authentication</p>
+                        
+                        <div class="bill-item">
+                            <div class="bill-info">
+                                <div class="bill-icon">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <div class="bill-details">
+                                    <h4>Mobile Recharge</h4>
+                                    <p>Due in 3 days</p>
+                                </div>
+                            </div>
+                            <div class="bill-amount">₹299</div>
+                            <button class="pay-btn">Pay Now</button>
                         </div>
-                        <i class="fas fa-chevron-right"></i>
-                    </div>
-                    
-                    <div class="settings-option">
-                        <div>
-                            <h4>Notifications</h4>
-                            <p>Manage how you receive alerts and updates</p>
+                        
+                        <div class="bill-item">
+                            <div class="bill-info">
+                                <div class="bill-icon">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div class="bill-details">
+                                    <h4>Credit Card Bill</h4>
+                                    <p>Due in 12 days</p>
+                                </div>
+                            </div>
+                            <div class="bill-amount">₹12,450</div>
+                            <button class="pay-btn">Pay Now</button>
                         </div>
-                        <i class="fas fa-chevron-right"></i>
                     </div>
                 </div>
                 
-                <div class="settings-section">
-                    <h3>Preferences</h3>
-                    <div class="settings-option">
-                        <div>
-                            <h4>Currency</h4>
-                            <p>Set your preferred currency (currently Indian Rupee)</p>
+                <div class="card">
+                    <h3>Recent Payments</h3>
+                    <div class="bills-list">
+                        <div class="bill-item paid">
+                            <div class="bill-info">
+                                <div class="bill-icon">
+                                    <i class="fas fa-wifi"></i>
+                                </div>
+                                <div class="bill-details">
+                                    <h4>Internet Bill</h4>
+                                    <p>Paid on 10 Oct 2023</p>
+                                </div>
+                            </div>
+                            <div class="bill-amount">₹899</div>
+                            <div class="paid-badge">Paid</div>
                         </div>
-                        <i class="fas fa-chevron-right"></i>
+                        
+                        <div class="bill-item paid">
+                            <div class="bill-info">
+                                <div class="bill-icon">
+                                    <i class="fas fa-tv"></i>
+                                </div>
+                                <div class="bill-details">
+                                    <h4>Streaming Services</h4>
+                                    <p>Paid on 5 Oct 2023</p>
+                                </div>
+                            </div>
+                            <div class="bill-amount">₹1,199</div>
+                            <div class="paid-badge">Paid</div>
+                        </div>
+                        
+                        <div class="bill-item paid">
+                            <div class="bill-info">
+                                <div class="bill-icon">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <div class="bill-details">
+                                    <h4>Maintenance Charges</h4>
+                                    <p>Paid on 1 Oct 2023</p>
+                                </div>
+                            </div>
+                            <div class="bill-amount">₹2,000</div>
+                            <div class="paid-badge">Paid</div>
+                        </div>
                     </div>
-                    
-                    <div class="settings-option">
-                        <div>
-                            <h4>Language</h4>
-                            <p>Choose your preferred language</p>
-                        </div>
-                        <i class="fas fa-chevron-right"></i>
+                </div>
+                
+                <div class="card">
+                    <h3>Bill Payment History</h3>
+                    <div class="chart-container">
+                        <canvas id="billPaymentChart"></canvas>
                     </div>
-                    
-                    <div class="settings-option">
-                        <div>
-                            <h4>Theme</h4>
-                            <p>Switch between light and dark mode</p>
-                        </div>
-                        <button class="theme-toggle" id="settingsThemeToggle">
-                            <i class="fas fa-moon"></i>
-                            <span>Dark Mode</span>
-                        </button>
+                </div>
+                
+                <div class="card">
+                    <h3>Monthly Bill Summary</h3>
+                    <div class="chart-container">
+                        <canvas id="monthlyBillChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -726,89 +1318,201 @@
             <div class="dashboard-header">
                 <h1>Financial Calculators</h1>
             </div>
-            <p>Use our calculators to plan your finances effectively</p>
+            <p class="page-description">Use our calculators to plan your finances effectively</p>
             
             <div class="calculator-grid">
-                <div class="calculator">
-                    <h3><i class="fas fa-calculator"></i> Budget Calculator</h3>
-                    <div class="form-group">
-                        <label for="salary">Monthly Salary (₹)</label>
-                        <input type="number" id="salary" placeholder="Enter your monthly salary">
+                <div class="calculator-card">
+                    <div class="calculator-header">
+                        <i class="fas fa-calculator"></i>
+                        <h3>Budget Calculator</h3>
                     </div>
-                    <div class="form-group">
-                        <label for="rent">Rent/Mortgage (₹)</label>
-                        <input type="number" id="rent" placeholder="Enter rent/mortgage">
-                    </div>
-                    <div class="form-group">
-                        <label for="utilities">Utilities (₹)</label>
-                        <input type="number" id="utilities" placeholder="Enter utilities cost">
-                    </div>
-                    <div class="form-group">
-                        <label for="groceries">Groceries (₹)</label>
-                        <input type="number" id="groceries" placeholder="Enter groceries cost">
-                    </div>
-                    <div class="form-group">
-                        <label for="entertainment">Entertainment (₹)</label>
-                        <input type="number" id="entertainment" placeholder="Enter entertainment cost">
-                    </div>
-                    <button id="calculateBudget">Calculate Budget</button>
-                    <button class="reset" id="resetBudget">Reset</button>
-                    <div class="result" id="budgetResult">
-                        <h4>Your Budget Summary</h4>
-                        <div class="chart-container">
-                            <canvas id="budgetChart"></canvas>
+                    <div class="calculator">
+                        <div class="form-group">
+                            <label for="salary">Monthly Salary (₹)</label>
+                            <input type="number" id="salary" placeholder="Enter your monthly salary">
                         </div>
-                        <div id="budgetSuggestions"></div>
-                    </div>
-                </div>
-                
-                <div class="calculator">
-                    <h3><i class="fas fa-chart-pie"></i> SIP Calculator</h3>
-                    <div class="form-group">
-                        <label for="sipAmount">Monthly Investment (₹)</label>
-                        <input type="number" id="sipAmount" placeholder="Enter monthly investment">
-                    </div>
-                    <div class="form-group">
-                        <label for="sipDuration">Investment Period (Years)</label>
-                        <input type="number" id="sipDuration" placeholder="Enter investment period">
-                    </div>
-                    <div class="form-group">
-                        <label for="sipReturn">Expected Annual Return (%)</label>
-                        <input type="number" id="sipReturn" placeholder="Enter expected return">
-                    </div>
-                    <button id="calculateSIP">Calculate SIP</button>
-                    <button class="reset" id="resetSIP">Reset</button>
-                    <div class="result" id="sipResult">
-                        <h4>SIP Projection</h4>
-                        <p id="sipTotal"></p>
-                        <div class="chart-container">
-                            <canvas id="sipChart"></canvas>
+                        <div class="form-group">
+                            <label for="rent">Rent/Mortgage (₹)</label>
+                            <input type="number" id="rent" placeholder="Enter rent/mortgage">
+                        </div>
+                        <div class="form-group">
+                            <label for="utilities">Utilities (₹)</label>
+                            <input type="number" id="utilities" placeholder="Enter utilities cost">
+                        </div>
+                        <div class="form-group">
+                            <label for="groceries">Groceries (₹)</label>
+                            <input type="number" id="groceries" placeholder="Enter groceries cost">
+                        </div>
+                        <div class="form-group">
+                            <label for="entertainment">Entertainment (₹)</label>
+                            <input type="number" id="entertainment" placeholder="Enter entertainment cost">
+                        </div>
+                        <button id="calculateBudget" class="primary-btn">Calculate Budget</button>
+                        <button id="resetBudget" class="secondary-btn">Reset</button>
+                        <div class="result" id="budgetResult">
+                            <h4>Your Budget Summary</h4>
+                            <div class="chart-container">
+                                <canvas id="budgetChart"></canvas>
+                            </div>
+                            <div id="budgetSuggestions"></div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="calculator">
-                    <h3><i class="fas fa-home"></i> Loan Calculator</h3>
-                    <div class="form-group">
-                        <label for="loanAmount">Loan Amount (₹)</label>
-                        <input type="number" id="loanAmount" placeholder="Enter loan amount">
+                <div class="calculator-card">
+                    <div class="calculator-header">
+                        <i class="fas fa-chart-pie"></i>
+                        <h3>SIP Calculator</h3>
                     </div>
-                    <div class="form-group">
-                        <label for="loanInterest">Interest Rate (%)</label>
-                        <input type="number" id="loanInterest" placeholder="Enter interest rate">
+                    <div class="calculator">
+                        <div class="form-group">
+                            <label for="sipAmount">Monthly Investment (₹)</label>
+                            <input type="number" id="sipAmount" placeholder="Enter monthly investment">
+                        </div>
+                        <div class="form-group">
+                            <label for="sipDuration">Investment Period (Years)</label>
+                            <input type="number" id="sipDuration" placeholder="Enter investment period">
+                        </div>
+                        <div class="form-group">
+                            <label for="sipReturn">Expected Annual Return (%)</label>
+                            <input type="number" id="sipReturn" placeholder="Enter expected return">
+                        </div>
+                        <button id="calculateSIP" class="primary-btn">Calculate SIP</button>
+                        <button id="resetSIP" class="secondary-btn">Reset</button>
+                        <div class="result" id="sipResult">
+                            <h4>SIP Projection</h4>
+                            <p id="sipTotal"></p>
+                            <div class="chart-container">
+                                <canvas id="sipChart"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="loanTerm">Loan Term (Years)</label>
-                        <input type="number" id="loanTerm" placeholder="Enter loan term">
+                </div>
+                
+                <div class="calculator-card">
+                    <div class="calculator-header">
+                        <i class="fas fa-home"></i>
+                        <h3>Loan Calculator</h3>
                     </div>
-                    <button id="calculateLoan">Calculate Loan</button>
-                    <button class="reset" id="resetLoan">Reset</button>
-                    <div class="result" id="loanResult">
-                        <h4>Loan Details</h4>
-                        <p id="monthlyPayment"></p>
-                        <p id="totalInterest"></p>
-                        <div class="chart-container">
-                            <canvas id="loanChart"></canvas>
+                    <div class="calculator">
+                        <div class="form-group">
+                            <label for="loanAmount">Loan Amount (₹)</label>
+                            <input type="number" id="loanAmount" placeholder="Enter loan amount">
+                        </div>
+                        <div class="form-group">
+                            <label for="loanInterest">Interest Rate (%)</label>
+                            <input type="number" id="loanInterest" placeholder="Enter interest rate">
+                        </div>
+                        <div class="form-group">
+                            <label for="loanTerm">Loan Term (Years)</label>
+                            <input type="number" id="loanTerm" placeholder="Enter loan term">
+                        </div>
+                        <button id="calculateLoan" class="primary-btn">Calculate Loan</button>
+                        <button id="resetLoan" class="secondary-btn">Reset</button>
+                        <div class="result" id="loanResult">
+                            <h4>Loan Details</h4>
+                            <p id="monthlyPayment"></p>
+                            <p id="totalInterest"></p>
+                            <div class="chart-container">
+                                <canvas id="loanChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="calculator-card">
+                    <div class="calculator-header">
+                        <i class="fas fa-retweet"></i>
+                        <h3>EMI Calculator</h3>
+                    </div>
+                    <div class="calculator">
+                        <div class="form-group">
+                            <label for="emiAmount">Loan Amount (₹)</label>
+                            <input type="number" id="emiAmount" placeholder="Enter loan amount">
+                        </div>
+                        <div class="form-group">
+                            <label for="emiInterest">Interest Rate (%)</label>
+                            <input type="number" id="emiInterest" placeholder="Enter interest rate">
+                        </div>
+                        <div class="form-group">
+                            <label for="emiTerm">Loan Term (Months)</label>
+                            <input type="number" id="emiTerm" placeholder="Enter loan term in months">
+                        </div>
+                        <button id="calculateEMI" class="primary-btn">Calculate EMI</button>
+                        <button id="resetEMI" class="secondary-btn">Reset</button>
+                        <div class="result" id="emiResult">
+                            <h4>EMI Details</h4>
+                            <p id="emiValue"></p>
+                            <p id="totalPayment"></p>
+                            <div class="chart-container">
+                                <canvas id="emiChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="calculator-card">
+                    <div class="calculator-header">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Education Planner</h3>
+                    </div>
+                    <div class="calculator">
+                        <div class="form-group">
+                            <label for="educationCost">Education Cost (₹)</label>
+                            <input type="number" id="educationCost" placeholder="Enter total education cost">
+                        </div>
+                        <div class="form-group">
+                            <label for="educationYears">Years Until Needed</label>
+                            <input type="number" id="educationYears" placeholder="Enter years until needed">
+                        </div>
+                        <div class="form-group">
+                            <label for="educationReturn">Expected Return (%)</label>
+                            <input type="number" id="educationReturn" placeholder="Enter expected return">
+                        </div>
+                        <button id="calculateEducation" class="primary-btn">Calculate</button>
+                        <button id="resetEducation" class="secondary-btn">Reset</button>
+                        <div class="result" id="educationResult">
+                            <h4>Education Planning</h4>
+                            <p id="monthlySaving"></p>
+                            <p id="totalSaving"></p>
+                            <div class="chart-container">
+                                <canvas id="educationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="calculator-card">
+                    <div class="calculator-header">
+                        <i class="fas fa-umbrella-beach"></i>
+                        <h3>Retirement Planner</h3>
+                    </div>
+                    <div class="calculator">
+                        <div class="form-group">
+                            <label for="currentAge">Current Age</label>
+                            <input type="number" id="currentAge" placeholder="Enter your current age">
+                        </div>
+                        <div class="form-group">
+                            <label for="retirementAge">Retirement Age</label>
+                            <input type="number" id="retirementAge" placeholder="Enter retirement age">
+                        </div>
+                        <div class="form-group">
+                            <label for="monthlyExpense">Monthly Expense (₹)</label>
+                            <input type="number" id="monthlyExpense" placeholder="Enter monthly expense">
+                        </div>
+                        <div class="form-group">
+                            <label for="lifeExpectancy">Life Expectancy</label>
+                            <input type="number" id="lifeExpectancy" placeholder="Enter life expectancy">
+                        </div>
+                        <button id="calculateRetirement" class="primary-btn">Calculate</button>
+                        <button id="resetRetirement" class="secondary-btn">Reset</button>
+                        <div class="result" id="retirementResult">
+                            <h4>Retirement Planning</h4>
+                            <p id="retirementCorpus"></p>
+                            <p id="monthlySavingRetirement"></p>
+                            <div class="chart-container">
+                                <canvas id="retirementChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -819,8 +1523,60 @@
         <section id="analytics" class="page">
             <div class="dashboard-header">
                 <h1>Market Analytics</h1>
+                <div class="time-filter">
+                    <button class="time-btn active">1D</button>
+                    <button class="time-btn">1W</button>
+                    <button class="time-btn">1M</button>
+                    <button class="time-btn">1Y</button>
+                </div>
             </div>
-            <p>Detailed analysis of market trends and performance</p>
+            <p class="page-description">Detailed analysis of market trends and performance</p>
+            
+            <div class="market-overview">
+                <div class="market-card">
+                    <div class="market-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="market-details">
+                        <h3>NIFTY 50</h3>
+                        <div class="amount">19,845.65</div>
+                        <div class="change positive">+1.25%</div>
+                    </div>
+                </div>
+                
+                <div class="market-card">
+                    <div class="market-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="market-details">
+                        <h3>SENSEX</h3>
+                        <div class="amount">66,684.26</div>
+                        <div class="change positive">+1.12%</div>
+                    </div>
+                </div>
+                
+                <div class="market-card">
+                    <div class="market-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="market-details">
+                        <h3>USD/INR</h3>
+                        <div class="amount">82.85</div>
+                        <div class="change negative">-0.35%</div>
+                    </div>
+                </div>
+                
+                <div class="market-card">
+                    <div class="market-icon">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="market-details">
+                        <h3>Gold</h3>
+                        <div class="amount">₹59,850</div>
+                        <div class="change positive">+0.75%</div>
+                    </div>
+                </div>
+            </div>
             
             <div class="analytics-grid">
                 <div class="card">
@@ -850,58 +1606,192 @@
                         <canvas id="currencyChart"></canvas>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- Login Page -->
-        <section id="login" class="page">
-            <div class="auth-container">
-                <div class="auth-form">
-                    <h2><i class="fas fa-user-circle"></i> Login to Your Account</h2>
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" placeholder="Enter your username">
+                
+                <div class="card">
+                    <h3><i class="fas fa-chart-pie"></i> Market Cap Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="marketCapChart"></canvas>
                     </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" placeholder="Enter your password">
-                    </div>
-                    <button class="auth-submit" id="loginSubmit">Login</button>
-                    <div class="form-footer">
-                        <p>Don't have an account? <a href="#" id="toSignupLink">Sign up</a></p>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-trending-up"></i> Volatility Index</h3>
+                    <div class="chart-container">
+                        <canvas id="volatilityChart"></canvas>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Signup Page -->
-        <section id="signup" class="page">
-            <div class="auth-container">
-                <div class="auth-form">
-                    <h2><i class="fas fa-user-plus"></i> Create Your Account</h2>
-                    <div class="form-group">
-                        <label for="fullname">Full Name</label>
-                        <input type="text" id="fullname" placeholder="Enter your full name">
+        <!-- Settings Page -->
+        <section id="settings" class="page">
+            <div class="dashboard-header">
+                <h1>Settings</h1>
+            </div>
+            <p class="page-description">Customize your Afinity experience.</p>
+            
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Account Settings</h3>
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Personal Information</h4>
+                            <p>Update your name, email, and contact details</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" placeholder="Enter your email">
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Security</h4>
+                            <p>Change password and enable two-factor authentication</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="newUsername">Username</label>
-                        <input type="text" id="newUsername" placeholder="Choose a username">
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Notifications</h4>
+                            <p>Manage how you receive alerts and updates</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="newPassword">Password</label>
-                        <input type="password" id="newPassword" placeholder="Create a password">
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Privacy</h4>
+                            <p>Control your data and privacy settings</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" placeholder="Confirm your password">
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Preferences</h3>
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Currency</h4>
+                            <p>Set your preferred currency (currently Indian Rupee)</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </div>
-                    <button class="auth-submit" id="signupSubmit">Sign Up</button>
-                    <div class="form-footer">
-                        <p>Already have an account? <a href="#" id="toLoginLink">Login</a></p>
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-language"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Language</h4>
+                            <p>Choose your preferred language</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Theme</h4>
+                            <p>Switch between light and dark mode</p>
+                        </div>
+                        <button class="theme-toggle" id="settingsThemeToggle">
+                            <i class="fas fa-moon"></i>
+                            <span>Dark Mode</span>
+                        </button>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Dashboard Layout</h4>
+                            <p>Customize your dashboard view</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Data & Sync</h3>
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Data Export</h4>
+                            <p>Download your financial data</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Auto Sync</h4>
+                            <p>Configure automatic data synchronization</p>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="autoSync" checked>
+                            <label for="autoSync"></label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Cloud Backup</h4>
+                            <p>Enable cloud backup for your data</p>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="cloudBackup" checked>
+                            <label for="cloudBackup"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Support</h3>
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>Help & Support</h4>
+                            <p>Get help with using Afinity</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div class="option-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="option-details">
+                            <h4>About Afinity</h4>
+                            <p>Version 2.1.0 • Build 2023.10</p>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
                     </div>
                 </div>
             </div>
@@ -989,127 +1879,6 @@
             });
         });
 
-        // Login Functionality
-        const loginBtn = document.getElementById('loginBtn');
-        const loginPage = document.getElementById('login');
-        const loginSubmit = document.getElementById('loginSubmit');
-        const toSignupLink = document.getElementById('toSignupLink');
-        const toLoginLink = document.getElementById('toLoginLink');
-        
-        let isLoggedIn = false;
-        let users = JSON.parse(localStorage.getItem('afinityUsers')) || [];
-        
-        loginBtn.addEventListener('click', () => {
-            if (isLoggedIn) {
-                // Logout
-                isLoggedIn = false;
-                loginBtn.textContent = 'Login';
-                // Show dashboard page
-                pages.forEach(page => page.classList.remove('active'));
-                document.getElementById('dashboard').classList.add('active');
-                sidebarLinks.forEach(nav => nav.classList.remove('active'));
-                document.querySelector('[data-page="dashboard"]').classList.add('active');
-            } else {
-                // Show login page
-                pages.forEach(page => page.classList.remove('active'));
-                loginPage.classList.add('active');
-            }
-        });
-        
-        toSignupLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            pages.forEach(page => page.classList.remove('active'));
-            document.getElementById('signup').classList.add('active');
-        });
-        
-        toLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            pages.forEach(page => page.classList.remove('active'));
-            loginPage.classList.add('active');
-        });
-        
-        loginSubmit.addEventListener('click', () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (username && password) {
-                // Check if user exists
-                const user = users.find(u => u.username === username && u.password === password);
-                if (user) {
-                    isLoggedIn = true;
-                    loginBtn.textContent = 'Logout';
-                    // Show dashboard page
-                    pages.forEach(page => page.classList.remove('active'));
-                    document.getElementById('dashboard').classList.add('active');
-                    sidebarLinks.forEach(nav => nav.classList.remove('active'));
-                    document.querySelector('[data-page="dashboard"]').classList.add('active');
-                    
-                    // Reset form
-                    document.getElementById('username').value = '';
-                    document.getElementById('password').value = '';
-                } else {
-                    alert('Invalid username or password');
-                }
-            } else {
-                alert('Please enter both username and password');
-            }
-        });
-
-        // Signup Functionality
-        const signupSubmit = document.getElementById('signupSubmit');
-        
-        signupSubmit.addEventListener('click', () => {
-            const fullname = document.getElementById('fullname').value;
-            const email = document.getElementById('email').value;
-            const username = document.getElementById('newUsername').value;
-            const password = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (fullname && email && username && password && confirmPassword) {
-                if (password !== confirmPassword) {
-                    alert('Passwords do not match');
-                    return;
-                }
-                
-                // Check if username already exists
-                if (users.find(u => u.username === username)) {
-                    alert('Username already exists');
-                    return;
-                }
-                
-                // Check if email already exists
-                if (users.find(u => u.email === email)) {
-                    alert('Email already registered');
-                    return;
-                }
-                
-                // Add new user
-                users.push({ 
-                    fullname, 
-                    email, 
-                    username, 
-                    password,
-                    joinDate: new Date().toISOString()
-                });
-                localStorage.setItem('afinityUsers', JSON.stringify(users));
-                
-                alert('Account created successfully! Please login.');
-                
-                // Redirect to login page
-                pages.forEach(page => page.classList.remove('active'));
-                loginPage.classList.add('active');
-                
-                // Reset form
-                document.getElementById('fullname').value = '';
-                document.getElementById('email').value = '';
-                document.getElementById('newUsername').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-            } else {
-                alert('Please fill all fields');
-            }
-        });
-
         // Chatbot Functionality
         const chatbotToggle = document.getElementById('chatbotToggle');
         const chatbotWindow = document.getElementById('chatbotWindow');
@@ -1176,7 +1945,7 @@
 
         // Initialize Charts and Calculators
         document.addEventListener('DOMContentLoaded', function() {
-            // Dashboard Chart
+            // Dashboard Charts
             const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
             new Chart(incomeExpenseCtx, {
                 type: 'bar',
@@ -1210,7 +1979,100 @@
                 }
             });
             
-            // Savings Chart
+            const expensePieCtx = document.getElementById('expensePieChart').getContext('2d');
+            new Chart(expensePieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Housing', 'Food & Dining', 'Transportation', 'Entertainment', 'Utilities', 'Shopping', 'Health', 'Education'],
+                    datasets: [{
+                        data: [15000, 8000, 4500, 3000, 2500, 4500, 1800, 2500],
+                        backgroundColor: [
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', 
+                            '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+            
+            const investmentCtx = document.getElementById('investmentChart').getContext('2d');
+            new Chart(investmentCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: [485000, 502000, 518000, 510000, 545000, 567800],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Budget Page Charts
+            const budgetVsActualCtx = document.getElementById('budgetVsActualChart').getContext('2d');
+            new Chart(budgetVsActualCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Housing', 'Food', 'Transport', 'Entertainment', 'Utilities', 'Shopping', 'Health', 'Education'],
+                    datasets: [{
+                        label: 'Budget',
+                        data: [20000, 10000, 6000, 5000, 3500, 7000, 2500, 4000],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    }, {
+                        label: 'Actual',
+                        data: [15000, 8000, 4500, 3000, 2500, 4500, 1800, 2500],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+            
+            const spendingTrendsCtx = document.getElementById('spendingTrendsChart').getContext('2d');
+            new Chart(spendingTrendsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Spending',
+                        data: [42000, 43000, 41500, 44000, 42500, 41800],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Savings Page Charts
             const savingsCtx = document.getElementById('savingsChart').getContext('2d');
             new Chart(savingsCtx, {
                 type: 'line',
@@ -1219,9 +2081,122 @@
                     datasets: [{
                         label: 'Savings',
                         data: [18000, 19500, 21000, 20500, 22000, 22400],
-                        borderColor: '#3b82f6',
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         tension: 0.4,
-                        fill: false
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const savingsDistributionCtx = document.getElementById('savingsDistributionChart').getContext('2d');
+            new Chart(savingsDistributionCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Emergency Fund', 'Vacation', 'New Car', 'Home Renovation'],
+                    datasets: [{
+                        data: [70000, 25000, 150000, 75000],
+                        backgroundColor: [
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const savingsTrendCtx = document.getElementById('savingsTrendChart').getContext('2d');
+            new Chart(savingsTrendCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Monthly Savings',
+                        data: [18000, 19500, 21000, 20500, 22000, 22400],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Investments Page Charts
+            const portfolioAllocationCtx = document.getElementById('portfolioAllocationChart').getContext('2d');
+            new Chart(portfolioAllocationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Equity', 'Debt', 'Real Estate', 'International', 'Cash'],
+                    datasets: [{
+                        data: [305000, 100000, 85000, 77800, 0],
+                        backgroundColor: [
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const investmentPerformanceCtx = document.getElementById('investmentPerformanceChart').getContext('2d');
+            new Chart(investmentPerformanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['NIFTY 50', 'Tech ETF', 'Govt Bonds', 'REIT', 'International'],
+                    datasets: [{
+                        label: 'Returns (%)',
+                        data: [15.2, 22.5, 7.2, 9.8, 12.3],
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Bills Page Charts
+            const billPaymentCtx = document.getElementById('billPaymentChart').getContext('2d');
+            new Chart(billPaymentCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Bill Amount',
+                        data: [18500, 19200, 17800, 20100, 19500, 18900],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const monthlyBillCtx = document.getElementById('monthlyBillChart').getContext('2d');
+            new Chart(monthlyBillCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Electricity', 'Internet', 'Mobile', 'Credit Card', 'Streaming', 'Maintenance'],
+                    datasets: [{
+                        label: 'Monthly Bills',
+                        data: [2450, 899, 299, 12450, 1199, 2000],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
                     }]
                 },
                 options: {
@@ -1237,15 +2212,15 @@
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                     datasets: [{
-                        label: 'Tech Stocks',
-                        data: [150, 160, 155, 170, 165, 180],
+                        label: 'NIFTY 50',
+                        data: [17800, 18200, 18500, 18800, 19200, 19845],
                         borderColor: '#3b82f6',
                         tension: 0.4,
                         fill: false
                     }, {
-                        label: 'Energy Stocks',
-                        data: [80, 85, 90, 95, 100, 105],
-                        borderColor: '#f59e0b',
+                        label: 'SENSEX',
+                        data: [59800, 61200, 62500, 63800, 65200, 66684],
+                        borderColor: '#10b981',
                         tension: 0.4,
                         fill: false
                     }]
@@ -1320,6 +2295,45 @@
                 }
             });
             
+            const marketCapCtx = document.getElementById('marketCapChart').getContext('2d');
+            new Chart(marketCapCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Large Cap', 'Mid Cap', 'Small Cap'],
+                    datasets: [{
+                        data: [60, 25, 15],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            const volatilityCtx = document.getElementById('volatilityChart').getContext('2d');
+            new Chart(volatilityCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Volatility Index',
+                        data: [18.5, 16.2, 19.8, 17.5, 15.9, 14.2],
+                        borderColor: '#ef4444',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
             // Generate Investment Ideas
             const investmentGrid = document.getElementById('investmentGrid');
             const investmentIdeas = [
@@ -1327,23 +2341,18 @@
                 { name: "Technology ETFs", description: "Diversified exposure to tech sector", return: "12-15% annually" },
                 { name: "Real Estate Investment Trusts", description: "Invest in real estate without owning property", return: "8-12% annually" },
                 { name: "Government Bonds", description: "Low-risk investment with fixed returns", return: "6-8% annually" },
-                { name: "Cryptocurrency", description: "High-risk digital assets with potential for high returns", return: "Highly volatile" },
                 { name: "Dividend Stocks", description: "Stocks that pay regular dividends", return: "7-9% annually + growth" },
-                { name: "Mutual Funds", description: "Professionally managed diversified portfolios", return: "10-12% annually" },
-                { name: "Gold & Precious Metals", description: "Hedge against inflation and market volatility", return: "8-10% annually" },
-                { name: "Peer-to-Peer Lending", description: "Lend money to individuals or businesses", return: "10-14% annually" },
-                { name: "Startup Investments", description: "Invest in early-stage companies", return: "High risk, potentially 25%+" },
-                { name: "International Stocks", description: "Diversify with global companies", return: "10-13% annually" },
-                { name: "Sustainable/ESG Funds", description: "Invest in environmentally and socially responsible companies", return: "9-11% annually" }
+                { name: "Mutual Funds", description: "Professionally managed diversified portfolios", return: "10-12% annually" }
             ];
             
             investmentIdeas.forEach(idea => {
                 const card = document.createElement('div');
-                card.className = 'investment-card';
+                card.className = 'investment-idea';
                 card.innerHTML = `
                     <h4>${idea.name}</h4>
                     <p>${idea.description}</p>
                     <div class="return">Expected Return: ${idea.return}</div>
+                    <button class="action-btn">Explore</button>
                 `;
                 investmentGrid.appendChild(card);
             });
@@ -1541,6 +2550,206 @@
                 document.getElementById('loanResult').classList.remove('active');
                 if (window.loanChartInstance) {
                     window.loanChartInstance.destroy();
+                }
+            });
+            
+            // Additional Calculators
+            document.getElementById('calculateEMI').addEventListener('click', function() {
+                const amount = parseFloat(document.getElementById('emiAmount').value) || 0;
+                const interest = parseFloat(document.getElementById('emiInterest').value) || 0;
+                const term = parseFloat(document.getElementById('emiTerm').value) || 0;
+                
+                if (amount > 0 && interest > 0 && term > 0) {
+                    const monthlyRate = interest / 100 / 12;
+                    
+                    // Monthly payment formula: P = [r*PV] / [1 - (1 + r)^-n]
+                    const monthlyPayment = (monthlyRate * amount) / (1 - Math.pow(1 + monthlyRate, -term));
+                    const totalPayment = monthlyPayment * term;
+                    
+                    document.getElementById('emiValue').textContent = 
+                        `EMI: ₹${monthlyPayment.toFixed(2)}`;
+                    document.getElementById('totalPayment').textContent = 
+                        `Total Payment: ₹${totalPayment.toFixed(2)}`;
+                    
+                    const emiCtx = document.getElementById('emiChart').getContext('2d');
+                    
+                    // Clear previous chart if exists
+                    if (window.emiChartInstance) {
+                        window.emiChartInstance.destroy();
+                    }
+                    
+                    window.emiChartInstance = new Chart(emiCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Principal', 'Interest'],
+                            datasets: [{
+                                data: [amount, totalPayment - amount],
+                                backgroundColor: [
+                                    '#3b82f6',
+                                    '#ef4444'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    
+                    document.getElementById('emiResult').classList.add('active');
+                }
+            });
+            
+            document.getElementById('resetEMI').addEventListener('click', function() {
+                document.getElementById('emiAmount').value = '';
+                document.getElementById('emiInterest').value = '';
+                document.getElementById('emiTerm').value = '';
+                document.getElementById('emiResult').classList.remove('active');
+                if (window.emiChartInstance) {
+                    window.emiChartInstance.destroy();
+                }
+            });
+            
+            document.getElementById('calculateEducation').addEventListener('click', function() {
+                const cost = parseFloat(document.getElementById('educationCost').value) || 0;
+                const years = parseFloat(document.getElementById('educationYears').value) || 0;
+                const returnRate = parseFloat(document.getElementById('educationReturn').value) || 0;
+                
+                if (cost > 0 && years > 0 && returnRate > 0) {
+                    const monthlyRate = returnRate / 100 / 12;
+                    const months = years * 12;
+                    
+                    // Future value needed
+                    const futureValue = cost;
+                    
+                    // Monthly saving needed: P = FV / [((1 + r)^n - 1) / r] * (1 + r)
+                    const monthlySaving = futureValue / (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
+                    const totalSaving = monthlySaving * months;
+                    
+                    document.getElementById('monthlySaving').textContent = 
+                        `Monthly Saving Needed: ₹${monthlySaving.toFixed(2)}`;
+                    document.getElementById('totalSaving').textContent = 
+                        `Total Amount Saved: ₹${totalSaving.toFixed(2)}`;
+                    
+                    const educationCtx = document.getElementById('educationChart').getContext('2d');
+                    
+                    // Clear previous chart if exists
+                    if (window.educationChartInstance) {
+                        window.educationChartInstance.destroy();
+                    }
+                    
+                    // Generate data for chart
+                    const yearLabels = [];
+                    const values = [];
+                    let currentValue = 0;
+                    
+                    for (let i = 1; i <= years; i++) {
+                        yearLabels.push(`Year ${i}`);
+                        const yearMonths = i * 12;
+                        currentValue = monthlySaving * ((Math.pow(1 + monthlyRate, yearMonths) - 1) / monthlyRate) * (1 + monthlyRate);
+                        values.push(currentValue);
+                    }
+                    
+                    window.educationChartInstance = new Chart(educationCtx, {
+                        type: 'line',
+                        data: {
+                            labels: yearLabels,
+                            datasets: [{
+                                label: 'Education Fund Growth',
+                                data: values,
+                                borderColor: '#10b981',
+                                tension: 0.4,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    
+                    document.getElementById('educationResult').classList.add('active');
+                }
+            });
+            
+            document.getElementById('resetEducation').addEventListener('click', function() {
+                document.getElementById('educationCost').value = '';
+                document.getElementById('educationYears').value = '';
+                document.getElementById('educationReturn').value = '';
+                document.getElementById('educationResult').classList.remove('active');
+                if (window.educationChartInstance) {
+                    window.educationChartInstance.destroy();
+                }
+            });
+            
+            document.getElementById('calculateRetirement').addEventListener('click', function() {
+                const currentAge = parseFloat(document.getElementById('currentAge').value) || 0;
+                const retirementAge = parseFloat(document.getElementById('retirementAge').value) || 0;
+                const monthlyExpense = parseFloat(document.getElementById('monthlyExpense').value) || 0;
+                const lifeExpectancy = parseFloat(document.getElementById('lifeExpectancy').value) || 0;
+                
+                if (currentAge > 0 && retirementAge > currentAge && monthlyExpense > 0 && lifeExpectancy > retirementAge) {
+                    const yearsToRetirement = retirementAge - currentAge;
+                    const retirementYears = lifeExpectancy - retirementAge;
+                    const inflation = 6; // Assuming 6% inflation
+                    
+                    // Future monthly expense at retirement
+                    const futureMonthlyExpense = monthlyExpense * Math.pow(1 + inflation/100, yearsToRetirement);
+                    
+                    // Retirement corpus needed (25 times annual expense as per 4% rule)
+                    const retirementCorpus = futureMonthlyExpense * 12 * 25;
+                    
+                    // Monthly saving needed (assuming 10% return)
+                    const returnRate = 10;
+                    const monthlyRate = returnRate / 100 / 12;
+                    const months = yearsToRetirement * 12;
+                    
+                    const monthlySaving = retirementCorpus / (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate));
+                    
+                    document.getElementById('retirementCorpus').textContent = 
+                        `Retirement Corpus Needed: ₹${retirementCorpus.toFixed(2)}`;
+                    document.getElementById('monthlySavingRetirement').textContent = 
+                        `Monthly Saving Needed: ₹${monthlySaving.toFixed(2)}`;
+                    
+                    const retirementCtx = document.getElementById('retirementChart').getContext('2d');
+                    
+                    // Clear previous chart if exists
+                    if (window.retirementChartInstance) {
+                        window.retirementChartInstance.destroy();
+                    }
+                    
+                    window.retirementChartInstance = new Chart(retirementCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Current Age', 'Retirement Age', 'Life Expectancy'],
+                            datasets: [{
+                                label: 'Age',
+                                data: [currentAge, retirementAge, lifeExpectancy],
+                                backgroundColor: [
+                                    '#3b82f6',
+                                    '#10b981',
+                                    '#f59e0b'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    
+                    document.getElementById('retirementResult').classList.add('active');
+                }
+            });
+            
+            document.getElementById('resetRetirement').addEventListener('click', function() {
+                document.getElementById('currentAge').value = '';
+                document.getElementById('retirementAge').value = '';
+                document.getElementById('monthlyExpense').value = '';
+                document.getElementById('lifeExpectancy').value = '';
+                document.getElementById('retirementResult').classList.remove('active');
+                if (window.retirementChartInstance) {
+                    window.retirementChartInstance.destroy();
                 }
             });
         });
