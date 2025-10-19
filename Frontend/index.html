@@ -35,7 +35,6 @@
             <li><a href="#" class="sidebar-link" data-page="budget"><i class="fas fa-chart-pie"></i> Budget</a></li>
             <li><a href="#" class="sidebar-link" data-page="transactions"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
             <li><a href="#" class="sidebar-link" data-page="savings"><i class="fas fa-piggy-bank"></i> Savings</a></li>
-            <li><a href="account-aggregator.html" class="sidebar-link" target="_blank" rel="noopener noreferrer"><i class="fas fa-university"></i> Account Aggregator</a></li>
             <li><a href="#" class="sidebar-link" data-page="bills"><i class="fas fa-file-invoice-dollar"></i> Bills</a></li>
             <li><a href="#" class="sidebar-link" data-page="settings"><i class="fas fa-cog"></i> Settings</a></li>
         </ul>
@@ -50,15 +49,16 @@
 
         <!-- Floating Chatbot -->
         <div id="chat-widget" style="position:fixed;right:20px;bottom:20px;z-index:9999;font-family:Arial,Helvetica,sans-serif;">
-            <div id="chat-toggle" style="width:60px;height:60px;border-radius:50%;background:#0ea5a4;color:#03111a;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,0.2);cursor:pointer">
-                <i class="fas fa-robot"></i>
+            <div id="chat-toggle" style="width:110px;height:44px;border-radius:22px;background:#0ea5a4;color:#03111a;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;box-shadow:0 6px 18px rgba(0,0,0,0.2);cursor:pointer;font-weight:700;"> 
+                <i class="fas fa-robot" style="font-size:18px;"></i>
+                <span style="font-size:14px;">Chat</span>
             </div>
-            <div id="chat-panel" style="width:320px;max-height:480px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden;display:none;flex-direction:column;margin-top:8px;color:#111;">
-                <div style="padding:12px;background:#0ea5a4;color:#03111a;font-weight:700;">ThunderBuddies</div>
+            <div id="chat-panel" style="width:380px;max-width:calc(100vw - 40px);max-height:620px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);overflow:hidden;display:none;flex-direction:column;margin-top:10px;color:#111;">
+                <div style="padding:14px;background:#0ea5a4;color:#03111a;font-weight:700;">ThunderBuddies</div>
                 <div id="chat-messages" style="flex:1;padding:12px;overflow:auto;background:#f7fafc;"></div>
                 <form id="chat-form" style="display:flex;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:#fff;">
-                    <input id="chat-input" type="text" placeholder="Ask me about your finances..." style="flex:1;padding:8px;border-radius:8px;border:1px solid #cbd5e1;" />
-                    <button style="background:#0ea5a4;border:none;color:#03111a;padding:8px 12px;border-radius:8px;">Send</button>
+                    <input id="chat-input" type="text" placeholder="Ask me about your finances..." style="flex:1;padding:10px;border-radius:10px;border:1px solid #cbd5e1;font-size:14px;" />
+                    <button style="background:#0ea5a4;border:none;color:#03111a;padding:10px 14px;border-radius:10px;font-weight:700;">Send</button>
                 </form>
             </div>
         </div>
@@ -201,10 +201,32 @@
                 </div>
                 
                 <div class="card">
-                    <h3>
-                        Financial Goals
-                        <a href="#" class="view-all">View All</a>
-                    </h3>
+    <h3>
+        Income vs Expenses
+        <div class="time-filter">
+            <button class="time-btn active">6M</button>
+            <button class="time-btn">1Y</button>
+            <button class="time-btn">Custom</button>
+        </div>
+    </h3>
+    
+    <div class="income-expense-chart">
+        <div class="chart-container">
+            <canvas id="incomeExpenseChart"></canvas>
+        </div>
+        
+        <div class="chart-legend">
+            <div class="legend-item">
+                <span class="legend-color legend-income"></span>
+                <span>Income</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color legend-expense"></span>
+                <span>Expenses</span>
+            </div>
+        </div>
+    </div>
+</div>
                     <div class="goals-container">
                         <div class="goal-item">
                             <div class="goal-header">
