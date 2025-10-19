@@ -928,3 +928,258 @@ if (savedTheme === 'dark') {
     settingsThemeIcon.className = 'fas fa-sun';
     settingsThemeText.textContent = 'Light Mode';
 }
+
+// Dashboard-specific functionality (appended): reuses existing chart variables
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize dashboard charts only if they are not already created
+    function initializeDashboardCharts() {
+        try {
+            if (!incomeExpenseChart) {
+                const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
+                incomeExpenseChart = new Chart(incomeExpenseCtx, {
+                    type: 'bar',
+                    data: getIncomeExpenseData('6m'),
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            if (!expensePieChart) {
+                const expensePieCtx = document.getElementById('expensePieChart').getContext('2d');
+                expensePieChart = new Chart(expensePieCtx, {
+                    type: 'doughnut',
+                    data: getExpensePieData('current'),
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+
+            if (!investmentChart) {
+                const investmentCtx = document.getElementById('investmentChart').getContext('2d');
+                investmentChart = new Chart(investmentCtx, {
+                    type: 'line',
+                    data: getInvestmentData('ytd'),
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        } catch (err) {
+            // If canvases aren't present on the page, silently ignore (page may be different)
+            console.warn('Dashboard charts not initialized:', err.message);
+        }
+    }
+
+    // Wire time filter buttons (cards that declare data-period)
+    document.querySelectorAll('.time-filter .time-btn[data-period]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const period = this.getAttribute('data-period');
+            const parentCard = this.closest('.card');
+            const chartTitle = parentCard ? parentCard.querySelector('h3').textContent : '';
+
+            // Update active state
+            this.parentElement.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            if (chartTitle.includes('Income')) {
+                updateIncomeExpenseChart(period);
+            } else if (chartTitle.includes('Expense')) {
+                updateExpensePieChart(period);
+            } else if (chartTitle.includes('Investment')) {
+                updateInvestmentChart(period);
+            }
+        });
+    });
+
+    // Modal open/close handlers
+    const customChartBtn = document.getElementById('customChartBtn');
+    if (customChartBtn) customChartBtn.addEventListener('click', () => document.getElementById('customChartModal').style.display = 'block');
+    const generateCustomChartBtn = document.getElementById('generateCustomChart');
+    if (generateCustomChartBtn) generateCustomChartBtn.addEventListener('click', generateCustomChart);
+    const cancelCustomChart = document.getElementById('cancelCustomChart');
+    if (cancelCustomChart) cancelCustomChart.addEventListener('click', () => document.getElementById('customChartModal').style.display = 'none');
+
+    const addGoalBtnEl = document.getElementById('addGoalBtn');
+    if (addGoalBtnEl) addGoalBtnEl.addEventListener('click', () => document.getElementById('addGoalModal').style.display = 'block');
+    const saveGoalBtn = document.getElementById('saveGoal');
+    if (saveGoalBtn) saveGoalBtn.addEventListener('click', addNewGoal);
+    const cancelAddGoal = document.getElementById('cancelAddGoal');
+    if (cancelAddGoal) cancelAddGoal.addEventListener('click', () => document.getElementById('addGoalModal').style.display = 'none');
+
+    // Navigation quick links
+    const viewAllTransactions = document.getElementById('viewAllTransactions');
+    if (viewAllTransactions) viewAllTransactions.addEventListener('click', function(e){ e.preventDefault(); showPage('transactions'); });
+    const viewAllBills = document.getElementById('viewAllBills');
+    if (viewAllBills) viewAllBills.addEventListener('click', function(e){ e.preventDefault(); showPage('bills'); });
+
+    // Interactive lists
+    document.querySelectorAll('.goal-item').forEach(item => item.addEventListener('click', function() {
+        const goalType = this.getAttribute('data-goal');
+        showPage('savings');
+        setTimeout(() => { highlightGoal(goalType); }, 100);
+    }));
+
+    document.querySelectorAll('.transaction-item').forEach(item => item.addEventListener('click', function() {
+        const category = this.getAttribute('data-category');
+        showPage('transactions');
+        setTimeout(() => { filterTransactions(category); }, 100);
+    }));
+
+    document.querySelectorAll('.bill-item').forEach(item => item.addEventListener('click', function() {
+        const billType = this.getAttribute('data-bill');
+        showPage('bills');
+        setTimeout(() => { highlightBill(billType); }, 100);
+    }));
+
+    // Modal close buttons
+    document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', function(){ this.closest('.modal').style.display = 'none'; }));
+
+    // Click outside to close
+    window.addEventListener('click', function(e){ document.querySelectorAll('.modal').forEach(modal => { if (e.target === modal) modal.style.display = 'none'; }); });
+
+    // Chart update helpers
+    function updateIncomeExpenseChart(period) {
+        if (!incomeExpenseChart) return;
+        const data = getIncomeExpenseData(period);
+        incomeExpenseChart.data = data;
+        incomeExpenseChart.update();
+    }
+
+    function updateExpensePieChart(period) {
+        if (!expensePieChart) return;
+        const data = getExpensePieData(period);
+        expensePieChart.data = data;
+        expensePieChart.update();
+    }
+
+    function updateInvestmentChart(period) {
+        if (!investmentChart) return;
+        const data = getInvestmentData(period);
+        investmentChart.data = data;
+        investmentChart.update();
+    }
+
+    // Data provider helpers (mocked / deterministic)
+    function getIncomeExpenseData(period) {
+        const data = {
+            '6m': {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{ label: 'Income', data: [62000, 63000, 64000, 65000, 64000, 64200], backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Expenses', data: [41000, 42000, 43000, 41500, 42000, 41800], backgroundColor: '#ef4444', borderRadius: 4 }]
+            },
+            '1y': {
+                labels: ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'],
+                datasets: [{ label: 'Income', data: [60000,61000,62000,63000,64000,65000,64000,64200,64500,64800,65000,65200], backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Expenses', data: [40000,40500,41000,41500,42000,42500,41800,42000,42200,42500,42800,43000], backgroundColor: '#ef4444', borderRadius: 4 }]
+            }
+        };
+        return data[period] || data['6m'];
+    }
+
+    function getExpensePieData(period) {
+        const data = {
+            'current': { labels: ['Housing','Food & Dining','Transportation','Entertainment','Utilities','Shopping','Health','Education'], datasets: [{ data: [15000,8000,4500,3000,2500,4500,1800,2500], backgroundColor: ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'] }] },
+            'last': { labels: ['Housing','Food & Dining','Transportation','Entertainment','Utilities','Shopping','Health','Education'], datasets: [{ data: [14500,7500,4200,2800,2300,4000,1600,2200], backgroundColor: ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'] }] }
+        };
+        return data[period] || data['current'];
+    }
+
+    function getInvestmentData(period) {
+        const data = {
+            'ytd': { labels: ['Jan','Feb','Mar','Apr','May','Jun'], datasets: [{ label: 'Portfolio Value', data: [485000,502000,518000,510000,545000,567800], borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', tension: 0.4, fill: true }] },
+            '1y': { labels: ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'], datasets: [{ label: 'Portfolio Value', data: [450000,460000,470000,480000,485000,490000,502000,510000,518000,525000,545000,567800], borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', tension: 0.4, fill: true }] }
+        };
+        return data[period] || data['ytd'];
+    }
+
+    function generateCustomChart() {
+        const chartType = document.getElementById('chartType').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const dataType = document.getElementById('dataType').value;
+
+        const customData = generateCustomChartData(chartType, startDate, endDate, dataType);
+
+        if (incomeExpenseChart) incomeExpenseChart.destroy();
+
+        const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
+        incomeExpenseChart = new Chart(incomeExpenseCtx, { type: chartType, data: customData, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: `Custom Chart (${startDate} to ${endDate})` } }, scales: { y: { beginAtZero: true } } } });
+
+        document.getElementById('customChartModal').style.display = 'none';
+        showNotification('Custom chart generated successfully!', 'success');
+    }
+
+    function generateCustomChartData(chartType, startDate, endDate, dataType) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const months = [];
+        const incomeData = [];
+        const expenseData = [];
+
+        let current = new Date(start);
+        while (current <= end) {
+            const month = current.toLocaleString('default', { month: 'short' });
+            const year = current.getFullYear();
+            months.push(`${month} ${year}`);
+
+            const baseIncome = 60000 + Math.random() * 10000;
+            const baseExpense = 40000 + Math.random() * 8000;
+
+            incomeData.push(Math.round(baseIncome));
+            expenseData.push(Math.round(baseExpense));
+            current.setMonth(current.getMonth() + 1);
+        }
+
+        const datasets = [];
+        if (dataType === 'income' || dataType === 'both') datasets.push({ label: 'Income', data: incomeData, backgroundColor: dataType === 'both' ? '#10b981' : 'rgba(16,185,129,0.8)', borderColor: '#10b981', borderRadius: 4, fill: chartType === 'line' && dataType !== 'both' });
+        if (dataType === 'expenses' || dataType === 'both') datasets.push({ label: 'Expenses', data: expenseData, backgroundColor: dataType === 'both' ? '#ef4444' : 'rgba(239,68,68,0.8)', borderColor: '#ef4444', borderRadius: 4, fill: chartType === 'line' && dataType !== 'both' });
+
+        return { labels: months, datasets: datasets };
+    }
+
+    function addNewGoal() {
+        const goalName = document.getElementById('goalName').value;
+        const targetAmount = parseFloat(document.getElementById('targetAmount').value) || 0;
+        const currentAmount = parseFloat(document.getElementById('currentAmount').value) || 0;
+        const targetDate = document.getElementById('targetDate').value;
+
+        if (!goalName || !targetAmount || !currentAmount || !targetDate) { showNotification('Please fill all fields', 'error'); return; }
+
+        const progress = ((currentAmount / targetAmount) * 100).toFixed(1);
+        const goalsContainer = document.querySelector('.goals-container');
+        const newGoal = document.createElement('div');
+        newGoal.className = 'goal-item';
+        newGoal.setAttribute('data-goal', goalName.toLowerCase().replace(/\s+/g, '-'));
+        newGoal.innerHTML = `\n            <div class="goal-header">\n                <h4>${goalName}</h4>\n                <span>₹${parseInt(currentAmount).toLocaleString()}/₹${parseInt(targetAmount).toLocaleString()}</span>\n            </div>\n            <div class="goal-progress">\n                <div class="goal-progress-bar" style="width: ${progress}%"></div>\n            </div>\n            <div class="goal-details">\n                <span>${progress}% Completed</span>\n                <span>₹${(targetAmount - currentAmount).toLocaleString()} left</span>\n            </div>\n        `;
+
+        goalsContainer.appendChild(newGoal);
+        newGoal.addEventListener('click', function() { showPage('savings'); });
+
+        document.getElementById('addGoalModal').style.display = 'none';
+        document.getElementById('goalName').value = '';
+        document.getElementById('targetAmount').value = '';
+        document.getElementById('currentAmount').value = '';
+        document.getElementById('targetDate').value = '';
+
+        showNotification('New savings goal added successfully!', 'success');
+    }
+
+    // Small helper notification function
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 12px 16px; border-radius: 8px; color: white; z-index: 10000; font-weight:600;';
+        if (type === 'success') notification.style.background = 'var(--success)';
+        else if (type === 'error') notification.style.background = 'var(--danger)';
+        else notification.style.background = 'var(--primary)';
+        document.body.appendChild(notification);
+        setTimeout(() => { notification.remove(); }, 3000);
+    }
+
+    // Initialize charts for dashboard area
+    initializeDashboardCharts();
+});
