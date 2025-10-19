@@ -47,8 +47,13 @@
         </div>
     </div>
 
-        <!-- Floating Chatbot -->
-        <div id="chat-widget" style="position:fixed;right:20px;bottom:20px;z-index:9999;font-family:Arial,Helvetica,sans-serif;">
+        <!-- Floating Chatbot + Banks Shortcut -->
+        <div id="chat-widget" style="position:fixed;right:20px;bottom:20px;z-index:9999;font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+            <!-- Banks quick action button -->
+            <a id="banks-quick" href="banks.html" title="Open Banks" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:10px;background:#fff;color:#0f172a;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,0.12);font-weight:600;border:1px solid #e6edf2;">
+                <i class="fas fa-university" style="color:#047857;font-size:16px"></i>
+                <span style="font-size:14px;color:#047857">Banks</span>
+            </a>
             <div id="chat-toggle" style="width:110px;height:44px;border-radius:22px;background:#0ea5a4;color:#03111a;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;box-shadow:0 6px 18px rgba(0,0,0,0.2);cursor:pointer;font-weight:700;"> 
                 <i class="fas fa-robot" style="font-size:18px;"></i>
                 <span style="font-size:14px;">Chat</span>
@@ -201,15 +206,7 @@
                 </div>
                 
                 <div class="card">
-    <h3>
-        Income vs Expenses
-        <div class="time-filter">
-            <button class="time-btn active">6M</button>
-            <button class="time-btn">1Y</button>
-            <button class="time-btn">Custom</button>
-        </div>
-    </h3>
-    
+                    <h3>Savings Goals</h3>  
     <div class="income-expense-chart">
         <div class="chart-container">
             <canvas id="incomeExpenseChart"></canvas>
