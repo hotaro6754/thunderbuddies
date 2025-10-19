@@ -1,4 +1,4 @@
-    :root {
+:root {
             --primary: #1e40af;
             --primary-light: #3b82f6;
             --primary-dark: #1e3a8a;
@@ -53,6 +53,28 @@
             min-height: 100vh;
             overflow-x: hidden;
             display: flex;
+        }
+
+        /* Ensure left-to-right and left-aligned defaults to avoid unintended RTL/centered layouts */
+        html, body {
+            direction: ltr !important;
+        }
+
+        /* force main content to flow normally (sidebar left, content area aligned left) */
+        .main-content {
+            align-items: flex-start !important;
+            text-align: left !important;
+        }
+
+        /* ensure header and cards are left-aligned by default */
+        .dashboard-header, .card, .stat-card, .accounts-grid, .chart-container {
+            text-align: left !important;
+        }
+
+        /* anchor sidebar to the left explicitly */
+        .sidebar {
+            left: 0 !important;
+            right: auto !important;
         }
 
         /* Sidebar Styles */
