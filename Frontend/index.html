@@ -101,6 +101,37 @@
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({ message: text, conversation: [] })
                         });
+
+                        if (!res.ok) {
+                            // try to read JSON error body from server
+                            let errBody;
+                            try {
+                                errBody = await res.json();
+                            } catch (e) {
+                                errBody = await res.text();
+                            }
+                            // attempt to extract a friendly message
+                            let friendly = '';
+                            if (errBody && typeof errBody === 'object') {
+                                // backend wraps OpenAI error under detail.body
+                                if (errBody.detail && errBody.detail.body && errBody.detail.body.error && errBody.detail.body.error.message) {
+                                    friendly = errBody.detail.body.error.message;
+                                } else if (errBody.detail && typeof errBody.detail === 'string') {
+                                    friendly = errBody.detail;
+                                } else {
+                                    friendly = JSON.stringify(errBody);
+                                }
+                            } else {
+                                friendly = String(errBody);
+                            }
+
+                            const botEls = Array.from(messages.children).filter(n => n.textContent === 'Thinking...');
+                            const target = botEls.length ? botEls[botEls.length-1] : null;
+                            const msg = 'Error: ' + (friendly || ('HTTP ' + res.status));
+                            if (target) target.textContent = msg; else appendMessage(msg,'bot');
+                            return;
+                        }
+
                         const data = await res.json();
                         // replace last bot message
                         const botEls = Array.from(messages.children).filter(n => n.textContent === 'Thinking...');
