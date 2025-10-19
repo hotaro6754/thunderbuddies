@@ -104,10 +104,12 @@
 
                         if (!res.ok) {
                             // try to read JSON error body from server
+                            // use res.clone() to avoid consuming the original body stream
                             let errBody;
                             try {
-                                errBody = await res.json();
+                                errBody = await res.clone().json();
                             } catch (e) {
+                                // if JSON parsing fails (non-JSON body), read as text
                                 errBody = await res.text();
                             }
                             // attempt to extract a friendly message
